@@ -1,0 +1,1 @@
+<img src="templates/standart/img/verification/verification_old.png" title="Account officially confirmed!" data-original-title="Account officially confirmed!" data-bs-toggle="tooltip" data-bs-placement="bottom">

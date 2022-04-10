@@ -138,9 +138,9 @@ if (isset($_POST['registration'])) {
     $display_name = check_js($_POST['display_name']);
     $email = check_js($_POST['email']);
 
-    $redirect = !($config->conf_us == 1);
+    $redirect = $config->conf_us == 0;
 
-    if (empty($login) || empty($password) || empty($password_repeat) || empty($display_name) || empty($email)) {
+    if (empty($login) || empty($password) || empty($password_repeat) || empty($display_name) || ($redirect == true && empty($email))) {
         exit(json_encode(['status' => 'error', 'message' => 'You must fill in all fields.']));
     }
 
@@ -179,7 +179,7 @@ if (isset($_POST['registration'])) {
         exit(json_encode(['status' => 'error', 'message' => 'The entered passwords do not match.']));
     }
 
-    if ($config->conf_us == 1) {
+    if ($redirect == true) {
 
         // проверка на валидность почты
         if (!$user_obj->check_email($email)) {
@@ -208,7 +208,7 @@ if (isset($_POST['registration'])) {
         if ($answer['message'] != 'error') {
 
             // вывод ошибки из метода "after_registration_actions"
-            exit(json_encode(['status' => 'success', 'message' => $answer['message'], 'redirect' => $redirect]));
+            exit(json_encode(['status' => 'success', 'message' => $answer['message'], 'redirect' => !$redirect]));
         }
 
         exit(json_encode(['status' => 'error', 'message' => $answer['message']]));
@@ -438,16 +438,11 @@ if (isset($_POST['play_random_tracks'])) {
         $result_array[] = $track->path;
     }
 
-    exit(json_encode(['path' => $result_array]));
-}
+    if (!empty($result_array)) {
+        exit(json_encode(['status' => 'success', 'path' => $result_array]));
+    }
 
-if (isset($_POST['append_music_to_query'])) {
-
-    $id = check_js($_POST['track_id'], 'int');
-
-    $track = $pdo->query("SELECT path FROM tracks WHERE id = $id")->fetchColumn();
-
-    exit(json_encode(['path' => $track]));
+    exit(json_encode(['status' => 'error']));
 }
 
 if (isset($_POST['call_modal'])) {
@@ -472,48 +467,18 @@ if (isset($_POST['call_modal'])) {
     exit();
 }
 
-if (isset($_POST['update_user_shuffle_status'])) {
-
-    $status = check_js($_POST['status']);
-
-    if (is_auth()) {
-        $db_response = $pdo->prepare("UPDATE users SET track_shuffle = :status WHERE id = :id");
-        $db_response->execute([':status' => $status == 'true' ? 1 : 0, ':id' => $_SESSION['id']]);
-    } else {
-        $db_response = $pdo->prepare("UPDATE users SET track_shuffle = :status WHERE id = :ip");
-        $db_response->execute([':status' => $status == 'true' ? 1 : 0, ':ip' => get_ip()]);
-    }
-
-    exit();
-}
-
-if (isset($_POST['update_user_repeat_track_status'])) {
-
-    $status = clean($_POST['status']);
-
-    if (is_auth()) {
-        $db_response = $pdo->prepare("UPDATE users SET repeat_track = :status WHERE id = :id");
-        $db_response->execute([':status' => $status == 'true' ? 1 : 0, ':id' => $_SESSION['id']]);
-    } else {
-        $db_response = $pdo->prepare("UPDATE users SET repeat_track = :status WHERE id = :ip");
-        $db_response->execute([':status' => $status == 'true' ? 1 : 0, ':ip' => get_ip()]);
-    }
-
-    exit();
-}
-
 if (isset($_POST['get_track_info'])) {
 
     $track = check_js($_POST['track']);
 
-    $db_response = $pdo->query("SELECT tracks.id, tracks.cover, tracks.title, tracks.path, users.id as author_id, users.display_name FROM tracks LEFT JOIN users ON tracks.author = users.id WHERE tracks.path = '$track'");
+    $db_response = pdo()->query("SELECT tracks.id, tracks.cover, tracks.title, tracks.path, users.id as author_id, users.display_name FROM tracks LEFT JOIN users ON tracks.author = users.id WHERE tracks.path = '$track'");
     $db_response->setFetchMode(PDO::FETCH_OBJ);
     $track_data = $db_response->fetch();
 
     if (is_auth()) {
-        $db_response = $pdo->query("SELECT * FROM users__favorite_actions WHERE track_id = $track_data->id AND user_id = " . $_SESSION['id']);
+        $db_response = pdo()->query("SELECT * FROM users__favorite_actions WHERE track_id = $track_data->id AND user_id = " . $_SESSION['id']);
     } else {
-        $db_response = $pdo->query("SELECT * FROM users__favorite_actions WHERE track_id = $track_data->id AND ip = " . get_ip());
+        $db_response = pdo()->query("SELECT * FROM users__favorite_actions WHERE track_id = $track_data->id AND ip = " . get_ip());
     }
 
     $db_response->setFetchMode(PDO::FETCH_OBJ);
@@ -528,6 +493,13 @@ if (isset($_POST['up_track_history'])) {
 
     $track_data = get_track_by_src($track);
 
+    // check if row exist
+    $db_response = $pdo->query("SELECT * FROM track__history WHERE track_id = $track_data->id AND user_id = " . $_SESSION['id']);
+    $db_response->setFetchMode(PDO::FETCH_OBJ);
+    if ($db_response->fetch()) {
+        exit();
+    }
+
     if (is_auth()) {
         $db_response = $pdo->prepare("INSERT INTO track__history (user_id, track_id, ip) VALUES (:user_id, :track_id, :ip)");
         $db_response->execute([':user_id' => $_SESSION['id'], ':track_id' => $track_data->id, ':ip' => get_ip()]);
@@ -541,12 +513,49 @@ if (isset($_POST['up_track_history'])) {
     exit(json_encode(['status' => 'ok']));
 }
 
+if(isset($_POST['set_like_to_track'])) {
+    $track = check_js($_POST['track']);
+
+    $track_data = get_track_by_src($track);
+
+    if (is_auth()) {
+        $db_response = $pdo->query("SELECT * FROM users__favorite_actions WHERE track_id = $track_data->id AND user_id = " . $_SESSION['id']);
+        $db_response->setFetchMode(PDO::FETCH_OBJ);
+        if ($db_response->fetch()) {
+            $db_response = $pdo->query("DELETE FROM users__favorite_actions WHERE track_id = $track_data->id AND user_id = " . $_SESSION['id']);
+
+            $db_response = $pdo->query("UPDATE tracks SET likes = likes - 1 WHERE id = $track_data->id");
+        } else {
+            $db_response = $pdo->prepare("INSERT INTO users__favorite_actions (user_id, track_id, ip) VALUES (:user_id, :track_id, :ip)");
+            $db_response->execute([':user_id' => $_SESSION['id'], ':track_id' => $track_data->id, ':ip' => get_ip()]);
+
+            $db_response = $pdo->query("UPDATE tracks SET likes = likes + 1 WHERE id = $track_data->id");
+        }
+
+    } else {
+        $db_response = $pdo->query("SELECT * FROM users__favorite_actions WHERE track_id = $track_data->id AND ip = " . get_ip());
+        $db_response->setFetchMode(PDO::FETCH_OBJ);
+        if ($db_response->fetch()) {
+            $db_response = $pdo->query("DELETE FROM users__favorite_actions WHERE track_id = $track_data->id AND ip = " . get_ip());
+
+            $db_response = $pdo->query("UPDATE tracks SET likes = likes - 1 WHERE id = $track_data->id");
+        } else {
+            $db_response = $pdo->prepare("INSERT INTO users__favorite_actions (track_id, ip) VALUES (:track_id, :ip)");
+            $db_response->execute([':track_id' => $track_data->id, ':ip' => get_ip()]);
+
+            $db_response = $pdo->query("UPDATE tracks SET likes = likes + 1 WHERE id = $track_data->id");
+        }
+    }
+
+    exit(json_encode(['status' => 'success']));
+}
+
 if (isset($_POST['get_playlists'])) {
 
     $limit = 6;
 
     $playlists_array_template = ['Most Viewed', 'Likes', 'Top 6 Tracks'];
-    $playlists_desc_array_template = ['Most Viewed Tracks On Titify', 'Most liked playlists by users', 'Top 6 Tracks On Titify By Auditions'];
+    $playlists_desc_array_template = ['Most Viewed Tracks On Titify', 'Most Liked Playlists By Users', 'Top 6 Tracks On Titify By Auditions'];
 
     $script = '';
 
@@ -706,14 +715,20 @@ if (isset($_POST['open_playlist'])) {
 
         while ($track = $db_response->fetch()) {
             if (isset($track->id)) {
-                $tpl->load_template('elements/playlists/list/get_playlist_item.tpl');
+                if (is_auth()) {
+                    $is_liked = pdo()->query("SELECT id FROM users__favorite_actions WHERE track_id = $track->id AND ip = '".get_ip()."' AND user_id = {$_SESSION['id']}")->fetchColumn();
+                } else {
+                    $is_liked = pdo()->query("SELECT id FROM users__favorite_actions WHERE track_id = $track->id AND ip = '".get_ip() . "'")->fetchColumn();
+                }
 
+                $tpl->load_template('elements/playlists/list/get_playlist_item.tpl');
                 $tpl->set('{track_id}', $track->id);
                 $tpl->set('{track_path}', $track->path);
                 $tpl->set('{track_title}', $track->title);
                 $tpl->set('{track_cover}', $track->cover);
                 $tpl->set('{track_author_id}', $track->author_id);
                 $tpl->set('{track_author_login}', $track->login);
+                $tpl->set('{is_liked}', $is_liked == true ? 'true' : 'false');
 
                 $tpl->compile('playlist_item');
 
@@ -733,6 +748,7 @@ if (isset($_POST['open_playlist'])) {
         $tpl->show($tpl->result['content']);
         $tpl->global_clear();
     }
+
     exit();
 }
 
@@ -741,7 +757,7 @@ if (isset($_POST['find_tracks'])) {
     $search = check_js($_POST['search']);
 
     //поиск по названию, автору
-    $db_response = $pdo->prepare("SELECT tracks.id, tracks.path, tracks.title, tracks.cover, tracks.author, users.id AS author_id, users.login, users.name, users.lastname, users.cover AS user_cover FROM tracks LEFT JOIN users ON tracks.author = users.id WHERE tracks.title LIKE :search OR users.name LIKE :search OR users.lastname LIKE :search");
+    $db_response = $pdo->prepare("SELECT tracks.id, tracks.path, tracks.title, tracks.cover, tracks.author, users.id AS author_id, users.display_name, users.name, users.lastname, users.cover AS user_cover FROM tracks LEFT JOIN users ON tracks.author = users.id WHERE tracks.title LIKE :search OR users.name LIKE :search OR users.lastname LIKE :search");
     $db_response->setFetchMode(PDO::FETCH_OBJ);
     $db_response->execute([':search' => '%' . $search . '%']);
 
@@ -750,11 +766,16 @@ if (isset($_POST['find_tracks'])) {
     while ($track = $db_response->fetch()) {
         $tpl->load_template('elements/search/get_search_item.tpl');
 
+        $track_link = str_replace('files/tracks/', '', $track->path);
+        $track_link = substr($track_link, 0, strrpos($track_link, '.'));
+
         $tpl->set('{track_id}', $track->id);
         $tpl->set('{track_path}', $track->path);
         $tpl->set('{track_title}', $track->title);
         $tpl->set('{track_cover}', $track->cover ?? $track->users_cover);
-        $tpl->set('{track_author_login}', $track->login);
+        $tpl->set('{track_author_login}', $track->display_name);
+        $tpl->set('{track_author_id}', $track->author_id);
+        $tpl->set('{track_link}', $track_link);
 
         $tpl->compile('search_item');
 
@@ -932,4 +953,132 @@ if (isset($_POST['load_tracks_likes'])) {
     }
 
     exit(json_encode(['status' => 'success', 'data' => tpl()->getShow(tpl()->result['likes_data'])]));
+}
+
+if (isset($_POST['load_playlist_likes'])) {
+
+    $id = check_js($_POST['id'], 'int');
+
+    tpl()->result['likes_data'] = '';
+
+    $db_response = pdo()->prepare("SELECT users.id, users.display_name, users.avatar FROM users__favorite_actions LEFT JOIN users ON users.id = users__favorite_actions.user_id WHERE users__favorite_actions.playlist_id = :playlist_id AND users__favorite_actions.user_id IS NOT NULL GROUP BY users__favorite_actions.id DESC LIMIT 10");
+    $db_response->setFetchMode(PDO::FETCH_OBJ);
+    $db_response->execute([':playlist_id' => $id]);
+
+    // выборка данных из запроса
+    while ($playlists = $db_response->fetch()) {
+
+        // загрузка шаблона плейлиста
+        tpl()->load_template('elements/tracks/likes.tpl');
+
+        // передача переменных в шаблон
+        tpl()->set("{id}", $playlists->id);
+        tpl()->set("{cover}", $playlists->avatar);
+        tpl()->set("{display_name}", $playlists->display_name);
+
+        // компиляция шаблона
+        tpl()->compile('likes_data');
+
+        // очистка переменных
+        tpl()->clear();
+    }
+
+    if (tpl()->result['likes_data'] == '') {
+        tpl()->result['likes_data'] = '<div style="margin: 0 auto; color: var(--gray-color)">No one liked playlist.</div>';
+    }
+
+    exit(json_encode(['status' => 'success', 'data' => tpl()->getShow(tpl()->result['likes_data'])]));
+}
+
+if (isset($_POST['load_playlist_reposts'])) {
+
+    $id = check_js($_POST['id'], 'int');
+
+    tpl()->result['likes_data'] = '';
+
+    $db_response = pdo()->prepare("SELECT users.id, users.display_name, users.avatar FROM users__reposts_actions LEFT JOIN users ON users.id = users__reposts_actions.user_id WHERE users__reposts_actions.playlist_id = :playlist_id AND users__reposts_actions.user_id IS NOT NULL GROUP BY users__reposts_actions.id DESC LIMIT 10");
+    $db_response->setFetchMode(PDO::FETCH_OBJ);
+    $db_response->execute([':playlist_id' => $id]);
+
+    // выборка данных из запроса
+    while ($playlists = $db_response->fetch()) {
+
+        // загрузка шаблона плейлиста
+        tpl()->load_template('elements/tracks/likes.tpl');
+
+        // передача переменных в шаблон
+        tpl()->set("{id}", $playlists->id);
+        tpl()->set("{cover}", $playlists->avatar);
+        tpl()->set("{display_name}", $playlists->display_name);
+
+        // компиляция шаблона
+        tpl()->compile('likes_data');
+
+        // очистка переменных
+        tpl()->clear();
+    }
+
+    if (tpl()->result['likes_data'] == '') {
+        tpl()->result['likes_data'] = '<div style="text-align: center; color: var(--gray-color)">No one reposts playlist.</div>';
+    }
+
+    exit(json_encode(['status' => 'success', 'data' => tpl()->getShow(tpl()->result['likes_data'])]));
+}
+
+if (isset($_POST['load_other_users_playlists'])) {
+
+    $user_id = check_js($_POST['user_id'], 'int');
+
+    tpl()->result['other_playlists'] = '';
+
+    $db_response = pdo()->prepare("SELECT users__playlists.id, users__playlists.cover, users__playlists.name, users__playlists.likes, users__playlists.reposts, users.id AS author_id, users.display_name FROM users__playlists LEFT JOIN users ON users.id = users__playlists.user_id WHERE user_id = :user_id ORDER BY users__playlists.date_add LIMIT 3");
+    $db_response->setFetchMode(PDO::FETCH_OBJ);
+    $db_response->execute([':user_id' => $user_id]);
+
+    // выборка данных из запроса
+    while ($playlists = $db_response->fetch()) {
+
+        // загрузка шаблона плейлиста
+        tpl()->load_template('elements/playlists/list/other_users_playlist.tpl');
+
+        // передача переменных в шаблон
+        tpl()->set("{cover}", $playlists->cover);
+        tpl()->set("{name}", $playlists->name);
+        tpl()->set("{author_id}", $playlists->author_id);
+        tpl()->set("{author}", $playlists->display_name);
+        tpl()->set("{likes}", $playlists->likes);
+        tpl()->set("{reposts}", $playlists->reposts);
+
+        // компиляция шаблона
+        tpl()->compile('other_playlists');
+
+        // очистка переменных
+        tpl()->clear();
+    }
+
+    if (tpl()->result['other_playlists'] == '') {
+        tpl()->result['other_playlists'] = "<div style='text-align: center; color: var(--gray-color)'>The user hasn't created any playlists <yet class=''></yet></div>";
+    }
+
+    exit(json_encode(['status' => 'success', 'data' => tpl()->getShow(tpl()->result['other_playlists'])]));
+}
+
+if (isset($_POST['get_playlists_tracks'])) {
+    $id = check_js($_POST['id'], 'int');
+
+    $result_array = [];
+
+    $db_response = pdo()->prepare('SELECT tracks.path FROM users__playlists_tracks LEFT JOIN tracks ON tracks.id = users__playlists_tracks.track_id WHERE users__playlists_tracks.playlist_id = :playlist_id');
+    $db_response->setFetchMode(PDO::FETCH_OBJ);
+    $db_response->execute([':playlist_id' => $id]);
+
+    if ($db_response->rowCount() > 0) {
+        while ($tracks = $db_response->fetch()) {
+            $result_array[] = $tracks->path;
+        }
+
+        exit(json_encode(['status' => 'success', 'data' => $result_array]));
+    }
+
+    exit(json_encode(['status' => 'error', 'data' => 'No tracks in this playlist']));
 }

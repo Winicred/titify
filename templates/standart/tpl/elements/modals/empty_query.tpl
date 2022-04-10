@@ -9,6 +9,7 @@
                 ...
             </div>
             <div class="modal-footer">
+                <span class="modal_result" style="margin-right: auto"></span>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="setTimeout(() => {play()}, 1000)">Save changes</button>
             </div>

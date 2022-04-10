@@ -1,55 +1,34 @@
 <?php
 
 $message = '';
+$short_message = '';
 if (isset($_GET['a']) && isset($_GET['data'])) {
-    $id = check($_GET['a'], "int");
+    $id = check_js($_GET['a'], "int");
 
     $db_response = $pdo->prepare("SELECT `id`, `login`, `email`, `password` FROM `users` WHERE `id`=:id LIMIT 1");
     $db_response->setFetchMode(PDO::FETCH_OBJ);
-    $db_response->execute(array(':id' => $id));
+    $db_response->execute([':id' => $id]);
     $row = $db_response->fetch();
     if (empty($row->id)) {
         show_error_page();
     }
 
     if ($_GET['data'] != md5($row->id . $config->salt . $row->password . $row->email . date("Y-m-d"))) {
-        $message = '<p class=\'text-danger\'>Ссылка не активна!</p>';
-    } else {
-        $user = new Users($pdo);
-
-        $password = create_pass(7, 1);
-        $password2 = $user->convert_password($password, $config->salt);
-
-        $db_response = $pdo->prepare("UPDATE `users` SET `password`=:password WHERE `id`=:id LIMIT 1");
-        if ($db_response->execute(array(':password' => $password2, ':id' => $id)) == '1') {
-            inc_notifications();
-            $letter = recovery_letter($config->name, $row->login, $password);
-            send_mail($row->email, $letter['subject'], $letter['message'], $pdo);
-            $message = '<p class=\'text-success\'>Ссылка на восстановление пароля выслана на почту <b>' . $row->email . '</b></p>';
-        } else {
-            $message = '<p class=\'text-danger\'>Ошибка</p>';
-        }
-
-        header('Location: ../');
+        $message = '<p class=\'text-danger\'>Link is not active!</p>';
+        $short_message = 'Link is not active!';
     }
 }
 
 $tpl->load_template('elements/title/title.tpl');
-$tpl->set("{title}", $page->title);
-$tpl->set("{name}", $config->name);
+$tpl->set("{title}",  page()->page_info('recovery')->title);
+$tpl->set("{name}", config()->name);
 $tpl->compile('title');
 $tpl->clear();
 
-$nav = array(
-    $page_info->to_nav('main', 0, 0),
-    $page_info->to_nav('recovery', 1, 0)
-);
-
-include_once "inc/not_authorized.php";
-
-$tpl->load_template('authorization/recovery.tpl');
+$tpl->load_template('authorization/recovery_page.tpl');
 $tpl->set("{site_host}", $site_host);
 $tpl->set("{message}", $message);
+$tpl->set("{short_message}", $short_message);
 $tpl->compile('content');
 $tpl->clear();
-?>
+

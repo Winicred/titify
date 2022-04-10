@@ -24,17 +24,19 @@ if (empty($_SESSION['id'])) {
 /* CHANGE USER AVATAR */
 if (isset($_POST['change_avatar'])) {
 
+    $id = check_js($_POST['id'], 'int');
+
     // upload avatar
     $result = file_uploads("files/avatars", $_FILES['image']);
 
     // if upload error
     if ($result['alert'] == 'error') {
-        exit(json_encode($result));
+        exit(json_encode(['status' => 'error', 'message' => $result['message']]));
     }
 
     // if upload success change avatar in database
     $db_response = pdo()->prepare("UPDATE users SET avatar = :avatar WHERE id = :uid");
-    $db_response->execute([':uid' => $_SESSION['id'], ':avatar' => $result['full_dir']]);
+    $db_response->execute([':uid' => $id, ':avatar' => $result['full_dir']]);
 
     exit(json_encode(['status' => 'success', 'file' => $result['full_dir']]));
 }
@@ -42,19 +44,21 @@ if (isset($_POST['change_avatar'])) {
 /* CHANGE USER COVER */
 if (isset($_POST['change_cover'])) {
 
+    $id = check_js($_POST['id'], 'int');
+
     // upload cover
     $result = file_uploads("files/cover", $_FILES['image']);
 
     // if upload error
     if ($result['alert'] == 'error') {
-        exit(json_encode($result));
+        exit(json_encode(['status' => 'error', 'message' => $result['message']]));
     }
 
     // if upload success change cover in database
     $db_response = pdo()->prepare("UPDATE users SET cover = :cover WHERE id = :uid");
 
     // execute query with params
-    $db_response->execute([':uid' => $_SESSION['id'], ':cover' => $result['full_dir']]);
+    $db_response->execute([':uid' => $id, ':cover' => $result['full_dir']]);
 
     exit(json_encode(['status' => 'success', 'file' => '/' . $result['full_dir']]));
 }
@@ -196,7 +200,6 @@ if (isset($_POST['confirm_track'])) {
     $cover = $_POST['cover'];
     $private = check_js($_POST['private'], 'int');
 
-
     $db_response = pdo()->prepare("INSERT INTO tracks (author, path, title, cover, private) VALUES (:author, :path, :title, :cover, :private)");
     if ($db_response->execute([':author' => $_SESSION['id'], ':path' => $file, ':title' => $name, ':cover' => $cover, ':private' => $private])) {
         exit(json_encode(['status' => 'success']));
@@ -229,8 +232,10 @@ if (isset($_POST['set_comment_to_track'])) {
 
 if (isset($_POST['default_cover'])) {
 
+    $id = check_js($_POST['id'], 'int');
+
     $db_response = pdo()->prepare("UPDATE users SET cover = DEFAULT WHERE id = :id");
-    if ($db_response->execute([':id' => $_SESSION['id']])) {
+    if ($db_response->execute([':id' => $id])) {
         exit(json_encode(['status' => 'success', 'cover' => '/files/cover/standart.png']));
     }
 
@@ -366,6 +371,37 @@ if (isset($_POST['very_user'])) {
     exit(json_encode(['status' => 'error', 'message' => 'Error while unvery user.']));
 }
 
+if (isset($_POST['send_very_request'])) {
+
+    if (isset($_POST['id'])) {
+        $id = check_js($_POST['id'], 'int');
+    } else {
+        $id = $_SESSION['id'];
+    }
+
+    $db_response = pdo()->prepare("UPDATE users SET is_very_request = 1 WHERE id = :id");
+    if ($db_response->execute([':id' => $id])) {
+        exit(json_encode(['status' => 'success', 'message' => 'Very request sent successfully.']));
+    }
+
+    exit(json_encode(['status' => 'error', 'message' => 'Error while sending very request.']));
+}
+
+if (isset($_POST['cancel_very_request'])) {
+    if (isset($_POST['id'])) {
+        $id = check_js($_POST['id'], 'int');
+    } else {
+        $id = $_SESSION['id'];
+    }
+
+    $db_response = pdo()->prepare("UPDATE users SET is_very_request = 0 WHERE id = :id");
+    if ($db_response->execute([':id' => $id])) {
+        exit(json_encode(['status' => 'success', 'message' => 'Very request canceled successfully.']));
+    }
+
+    exit(json_encode(['status' => 'error', 'message' => 'Error while canceling very request.']));
+}
+
 if (isset($_POST['restore_user'])) {
     $id = check_js($_POST['id'], 'int');
 
@@ -381,20 +417,42 @@ if (isset($_POST['create_playlist'])) {
     $name = check_js($_POST['name']);
     $type = $_POST['type'] == 'private' ? 1 : 0;
 
+    if (empty($name)) {
+        exit(json_encode(['status' => 'error', 'message' => 'Playlist name is empty.']));
+    }
+
+    if (strlen($name) > 100) {
+        exit(json_encode(['status' => 'error', 'message' => 'Playlist name is too long.']));
+    }
+
+    if (preg_match('/[\'^£$%&*()}{@#~?><>,|=_+¬]/', $name)) {
+        exit(json_encode(['status' => 'error', 'message' => 'Playlist name contains special characters.']));
+    }
+
+    // Check if playlist exists
+    $db_response = pdo()->prepare("SELECT id FROM users__playlists WHERE name = :name");
+    $db_response->execute([':name' => $name]);
+    if (!empty($db_response->fetchAll())) {
+        exit(json_encode(['status' => 'error', 'message' => 'Playlist already exists.']));
+    }
+
     $db_response = pdo()->prepare("INSERT INTO users__playlists (user_id, name,  private) VALUES (:user_id, :name, :private)");
     if ($db_response->execute([':user_id' => $_SESSION['id'], ':name' => $name, ':private' => $type])) {
         exit(json_encode(['status' => 'success', 'message' => 'Playlist created successfully.']));
+    } else {
+        exit(json_encode(['status' => 'error', 'message' => 'Error while creating playlist.']));
     }
-
-    exit(json_encode(['status' => 'error', 'message' => 'Error while creating playlist.']));
 }
 
 if (isset($_POST['find_user_playlists'])) {
+    $id = check_js($_POST['id'], 'int');
+    $name = check_js($_POST['name']);
+
     tpl()->result['playlists_mini'] = '';
 
-    $db_response = pdo()->prepare("SELECT * FROM users__playlists WHERE user_id = :user_id");
+    $db_response = pdo()->prepare("SELECT users__playlists.* FROM users__playlists LEFT JOIN users__playlists_tracks ON users__playlists.id = users__playlists_tracks.playlist_id WHERE (users__playlists_tracks.track_id != :track_id OR users__playlists_tracks.track_id IS NULL) AND users__playlists.user_id = :user_id AND users__playlists.name LIKE :search GROUP BY users__playlists.id");
     $db_response->setFetchMode(PDO::FETCH_OBJ);
-    if ($db_response->execute([':user_id' => $_SESSION['id']])) {
+    if ($db_response->execute([':track_id' => $id, ':user_id' => $_SESSION['id'], ':search' => '%' . $name . '%'])) {
         while ($playlists = $db_response->fetch()) {
             tpl()->load_template('elements/modals/modal_data/playlists_mini.tpl');
             tpl()->set('{cover}', $playlists->cover);
@@ -403,6 +461,10 @@ if (isset($_POST['find_user_playlists'])) {
             tpl()->set('{user_id}', $playlists->user_id);
             tpl()->compile('playlists_mini');
             tpl()->clear();
+        }
+
+        if (tpl()->result['playlists_mini'] == '') {
+            tpl()->result['playlists_mini'] = '<div class="no_results">No results</div>';
         }
 
         exit(json_encode(['status' => 'success', 'data' => tpl()->getShow(tpl()->result['playlists_mini'])]));
@@ -415,15 +477,17 @@ if (isset($_POST['add_track_to_playlist'])) {
     $playlist_id = check_js($_POST['playlist_id'], 'int');
     $track_id = check_js($_POST['track_id'], 'int');
 
-    $db_response = pdo()->prepare("INSERT INTO users__playlists_tracks (playlist_id, track_id) VALUES (:playlist_id, :track_id)");
+    $db_response = pdo()->prepare("INSERT INTO 	users__playlists_tracks (playlist_id, track_id) VALUES (:playlist_id, :track_id)");
     if ($db_response->execute([':playlist_id' => $playlist_id, ':track_id' => $track_id])) {
         exit(json_encode(['status' => 'success', 'message' => 'Track added to playlist successfully.']));
     }
 
-    exit(json_encode(['status' => 'error', 'message' => 'E  rror while adding track to playlist.']));
+    exit(json_encode(['status' => 'error', 'message' => 'Error while adding track to playlist.']));
 }
 
 if (isset($_POST['get_library_playlists'])) {
+
+    tpl()->result['playlists_mini'] = '';
 
     $db_response = pdo()->prepare("SELECT * FROM users__playlists WHERE user_id = :user_id ORDER BY id DESC LIMIT 6");
     $db_response->setFetchMode(PDO::FETCH_OBJ);
@@ -433,9 +497,14 @@ if (isset($_POST['get_library_playlists'])) {
             tpl()->set('{playlist_cover}', $playlists->cover);
             tpl()->set('{playlist_name}', $playlists->name);
             tpl()->set('{script}', "call_modal('edit_playlist', {id: " . $playlists->id . "})");
+            tpl()->set('{title}', "Click to edit playlist");
             tpl()->set('{author}', '');
             tpl()->compile('playlists_mini');
             tpl()->clear();
+        }
+
+        if (tpl()->result['playlists_mini'] == '') {
+            tpl()->result['playlists_mini'] = "<div class='empty_message'><span>You haven't created any playlist yet</span></div>";
         }
 
         exit(json_encode(['status' => 'success', 'data' => tpl()->getShow(tpl()->result['playlists_mini'])]));
@@ -486,7 +555,7 @@ if (isset($_POST['edit_playlist'])) {
     exit(json_encode(['status' => 'error', 'message' => 'Error while updating playlist.']));
 }
 
-if(isset($_POST['delete_playlist'])) {
+if (isset($_POST['delete_playlist'])) {
     $id = check_js($_POST['id'], 'int');
     $password = check_js($_POST['password']);
 
@@ -494,17 +563,18 @@ if(isset($_POST['delete_playlist'])) {
     $db_response->setFetchMode(PDO::FETCH_OBJ);
     if ($db_response->execute([':id' => $_SESSION['id']])) {
         $user = $db_response->fetch();
-        if ($user_obj->convert_password($password, $user->password)) {
+        if ($user_obj->convert_password($password, $config->salt) == $user->password) {
             $db_response = pdo()->prepare("DELETE FROM users__playlists WHERE id = :id");
             if ($db_response->execute([':id' => $id])) {
                 exit(json_encode(['status' => 'success', 'message' => 'Playlist deleted successfully.']));
             }
         }
+        exit(json_encode(['status' => 'error', 'message' => 'Wrong password.']));
     }
     exit(json_encode(['status' => 'error', 'message' => 'Error while deleting playlist.']));
 }
 
-if(isset($_POST['upload_track_file'])) {
+if (isset($_POST['upload_track_file'])) {
     $file = $_FILES['file'];
 
     $result = file_uploads('files/tracks', $file);
@@ -513,4 +583,155 @@ if(isset($_POST['upload_track_file'])) {
     }
 
     exit(json_encode(['status' => 'success', 'message' => 'Track uploaded successfully.', 'data' => $result['full_dir']]));
+}
+
+if (isset($_POST['upload_image_file'])) {
+    $image = $_FILES['image'];
+
+    $result = file_uploads('files/track_covers', $image);
+    if ($result['alert'] == 'error') {
+        exit(json_encode(['status' => 'error', 'message' => $result['message']]));
+    }
+
+    exit(json_encode(['status' => 'success', 'message' => 'Track image uploaded successfully.', 'data' => $result['full_dir']]));
+}
+
+// upload track
+if (isset($_POST['upload_track'])) {
+    $name = check_js($_POST['name']);
+    $file = check_js($_POST['file']);
+    $image = check_js($_POST['image']);
+    $genre = check_js($_POST['genre']);
+    $description = check_js($_POST['description']);
+    $privacy = $_POST['privacy'] == 'private' ? 1 : 0;
+
+    // get today date and time
+    $date = date('Y-m-d H:i:s');
+
+    $db_response = pdo()->prepare("INSERT INTO tracks (author, title, path, cover, description, genre, private, date_add) VALUES (:user_id, :name, :file, :image, :description, :genre, :privacy, :date)");
+    if ($db_response->execute([':user_id' => $_SESSION['id'], ':name' => $name, ':file' => $file, ':image' => $image, ':description' => $description, ':genre' => $genre, ':privacy' => $privacy, ':date' => $date])) {
+        exit(json_encode(['status' => 'success', 'message' => 'Track uploaded successfully.']));
+    }
+
+    exit(json_encode(['status' => 'error', 'message' => 'Error while uploading track.']));
+}
+
+if (isset($_POST['block_user'])) {
+    $id = check_js($_POST['id'], 'int');
+
+    // find blocked user in users__black_list table
+    $db_response = pdo()->prepare("SELECT * FROM users__black_list WHERE who = :who AND whom = :whom");
+    $db_response->setFetchMode(PDO::FETCH_OBJ);
+    if ($db_response->execute([':who' => $_SESSION['id'], ':whom' => $id])) {
+        $user = $db_response->fetch();
+        if ($user) {
+            $db_response = pdo()->prepare("DELETE FROM users__black_list WHERE who = :who AND whom = :whom");
+            if ($db_response->execute([':who' => $_SESSION['id'], ':whom' => $id])) {
+                exit(json_encode(['status' => 'success', 'message' => 'User unblocked successfully.', 'blocked' => false]));
+            }
+        } else {
+            $db_response = pdo()->prepare("INSERT INTO users__black_list (who, whom) VALUES (:who, :whom)");
+            if ($db_response->execute([':who' => $_SESSION['id'], ':whom' => $id])) {
+                exit(json_encode(['status' => 'success', 'message' => 'User blocked successfully.', 'blocked' => true]));
+            }
+        }
+    }
+}
+
+if (isset($_POST['report_user'])) {
+    $id = check_js($_POST['id'], 'int');
+    $reason = check_js($_POST['reason']);
+    $report_text = check_js($_POST['report_text']);
+    $is_need_to_block = $_POST['is_need_to_block'] == 'true' ? 1 : 0;
+
+    if ($id == $_SESSION['id']) {
+        exit(json_encode(['status' => 'error', 'message' => 'You can\'t report yourself.']));
+    }
+
+    if ($reason == 'Please select the reason for the user complaint') {
+        exit(json_encode(['status' => 'error', 'message' => 'Please select a reason.']));
+    }
+
+    if ($reason == 'Other') {
+        $reason = check_js($_POST['other_reason']);
+
+        if (empty($reason)) {
+            exit(json_encode(['status' => 'error', 'message' => 'Please, enter reason.']));
+        }
+    }
+
+    if ($is_need_to_block) {
+        $db_response = pdo()->prepare("SELECT * FROM users__black_list WHERE who = :who AND whom = :whom");
+        $db_response->setFetchMode(PDO::FETCH_OBJ);
+        if ($db_response->execute([':who' => $_SESSION['id'], ':whom' => $id])) {
+            $user = $db_response->fetch();
+            if (!$user) {
+                $db_response = pdo()->prepare("INSERT INTO users__black_list (who, whom) VALUES (:who, :whom)");
+                $db_response->execute([':who' => $_SESSION['id'], ':whom' => $id]);
+            }
+        }
+    }
+
+    $db_response = pdo()->prepare("INSERT INTO users__reports (from_user, to_user, reason, report_text, user_blocked) VALUES (:from_user, :to_user, :reason, :report_text, :user_blocked)");
+    if ($db_response->execute([':from_user' => $_SESSION['id'], ':to_user' => $id, ':reason' => $reason, ':report_text' => $report_text, ':user_blocked' => $is_need_to_block])) {
+        exit(json_encode(['status' => 'success', 'message' => 'User reported successfully.']));
+    }
+
+    exit(json_encode(['status' => 'error', 'message' => 'Error while reporting user.']));
+}
+
+if (isset($_POST['update_track_cover'])) {
+    $id = check_js($_POST['track_id'], 'int');
+    $cover = $_FILES['cover'];
+
+    $result = file_uploads('files/track_covers', $cover);
+    if ($result['alert'] == 'error') {
+        exit(json_encode(['status' => 'error', 'message' => $result['message']]));
+    }
+
+    $db_response = pdo()->prepare("UPDATE tracks SET cover = :cover WHERE id = :id");
+    if ($db_response->execute([':id' => $id, ':cover' => $result['full_dir']])) {
+        exit(json_encode(['status' => 'success', 'message' => 'Track cover updated successfully.', 'cover' => $result['full_dir']]));
+    }
+
+    exit(json_encode(['status' => 'error', 'message' => 'Error while updating track cover.']));
+}
+
+if (isset($_POST['edit_track'])) {
+    $id = check_js($_POST['id'], 'int');
+    $title = check_js($_POST['title']);
+    $genre = check_js($_POST['genre']);
+    $description = check_js($_POST['description']);
+    $private = $_POST['privacy'] == 'Private' ? 1 : 0;
+
+    $db_response = pdo()->prepare("UPDATE tracks SET title = :title, genre = :genre, description = :description, private = :private WHERE id = :id");
+    if ($db_response->execute([':id' => $id, ':title' => $title, ':genre' => $genre, ':description' => $description, ':private' => $private])) {
+
+        $track_name = pdo()->prepare("SELECT path FROM tracks WHERE id = :id");
+        $track_name->setFetchMode(PDO::FETCH_OBJ);
+        $track_name->execute([':id' => $id]);
+        $track_name = $track_name->fetch();
+        $track_name = $track_name->path;
+        $track_name = str_replace('.mp3', '', $track_name);
+        $track_name = str_replace('files/tracks/', '', $track_name);
+
+
+        exit(json_encode(['status' => 'success', 'message' => 'Track updated successfully.', 'track_name' => $track_name]));
+    }
+
+    exit(json_encode(['status' => 'error', 'message' => 'Error while updating track.']));
+}
+
+if (isset($_POST['delete_track'])) {
+    $id = check_js($_POST['id'], 'int');
+
+    $author_id = get_author_by_track_id($id)->id;
+
+    $db_response = pdo()->prepare("DELETE FROM tracks WHERE id = :id");
+    if ($db_response->execute([':id' => $id])) {
+
+        exit(json_encode(['status' => 'success','message' => 'Track deleted successfully.', 'user_id' => $author_id]));
+    }
+
+    exit(json_encode(['status' => 'error', 'message' => 'Error while deleting track.']));
 }

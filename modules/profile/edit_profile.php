@@ -41,6 +41,7 @@ tpl()->set("{reg_date}", expand_date($profile->regdate));
 tpl()->set("{ip}", $profile->ip);
 tpl()->set("{reg_ip}", $profile->reg_ip);
 tpl()->set("{is_very}", $profile->verification == 1 ? 'true' : 'false');
+tpl()->set("{is_very_request}", $profile->is_very_request == 1 ? 'true' : 'false');
 tpl()->set("{facebook}", $profile->facebook ?? '');
 tpl()->set("{twitter}", $profile->twitter ?? '');
 tpl()->set("{instagram}", $profile->instagram ?? '');

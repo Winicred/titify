@@ -4,9 +4,6 @@
         <h1 class="logo-text">Titify</h1>
     </div>
 
-    {*    <img src="templates/standart/img/loginform/Headphones.png" alt="Headphones"*}
-    {*         class="headphones">*}
-
     <div class="login_field" style="position:relative;">
         <div class="login_content login" style="position: relative">
             <h2>Log in</h2>
@@ -21,12 +18,12 @@
             </div>
 
             <div class="input_field">
-                <input type="text" id="login_email" placeholder="Email or login">
+                <input type="text" id="login_email" placeholder="Email or login" data-bs-toggle="tooltip" title="Your email or login (only letters and numbers)" data-bs-placement="left">
 
                 <div class="show_password">
-                    <input type="password" id="password" placeholder="Password">
+                    <input type="password" id="password" placeholder="Password" data-bs-toggle="tooltip" title="Your password" data-bs-placement="left">
 
-                    <div class="show_password_icon">
+                    <div class="show_password_icon" data-bs-toggle="tooltip" title="Show password">
                         <i class="fa-solid fa-eye-slash"></i>
 
                         <i class="fa-solid fa-eye" style="display: none"></i>
@@ -34,17 +31,40 @@
                 </div>
             </div>
 
-            <span id="message_result"></span>
+            <span id="message_result">{message}</span>
 
             <div class="sign_in_on">
                 <button class="submit_button" onclick="user_login()">Log in</button>
 
-                <span>{message}</span>
-                <span class="create_account">Don’t have an account? <a id="change_window" style="cursor:pointer;">Sign on</a></span>
+                <div>
+{*                    <a class="recovery_password" data-bs-toggle="tooltip" title="Forgot your password? Restore password">Recovery password</a>*}
+                    <span class="create_account" style="margin-top: 0">Don’t have an account? <a id="change_window" style="cursor:pointer;" data-bs-toggle="tooltip" title="Go to registration">Sign on</a></span>
+                </div>
+
+                <style>
+                    .sign_in_on > div {
+                        margin-top: 1rem;
+                        margin-bottom: 0.25rem;
+                    }
+
+                    .recovery_password {
+                        color: #C9C9C9;
+                        transition: var(--transition);
+                        text-decoration: none;
+                        cursor: pointer;
+                    }
+
+                    .recovery_password:hover {
+                        color: var(--main-color);
+                    }
+                </style>
+
             </div>
         </div>
 
         {include file='authorization/registration.tpl'}
+
+{*        {include file='authorization/recovery.tpl'}*}
     </div>
 </div>
 
@@ -59,15 +79,20 @@
             $('.show_password_icon i').addClass('fa-eye');
             $('.show_password input').attr('type', 'text');
             $('#reg_password_repeat').attr('type', 'text');
+            $('.show_password_icon').attr('data-bs-original-title', 'Hide password');
         } else {
             $('.show_password_icon i').removeClass('fa-eye');
             $('.show_password_icon i').addClass('fa-eye-slash');
             $('.show_password input').attr('type', 'password');
             $('#reg_password_repeat').attr('type', 'password');
+            $('.show_password_icon').attr('data-bs-original-title', 'Show password');
         }
+
+        $('.show_password_icon').tooltip('show');
     });
 
     $('.registration').hide();
+    $('.recovery').hide();
     $('#change_window').on('click', () => {
         $('.login').hide();
         $('.registration').show();
@@ -84,5 +109,15 @@
         $('.login input').val('');
         $('.show_password input').attr('type', 'password');
         $('#reg_password_repeat').attr('type', 'password');
+    });
+
+    $('.recovery_password').on('click', () => {
+        $('.login').hide();
+        $('.recovery').show();
+    });
+
+    $('#back_to_login').on('click', () => {
+        $('.recovery').hide();
+        $('.login').show();
     });
 </script>

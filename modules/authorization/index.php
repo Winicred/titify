@@ -461,7 +461,7 @@ if (!is_auth()) {
                 }
             }
         } else {
-            $config_mess = '<p class="text-danger">Аккаунт не зарегистрирован, сначала пройдите регистрацию!</p>';
+            $config_mess = '<p class="text-danger">Account not registered, please register first!</p>';
         }
     }
 

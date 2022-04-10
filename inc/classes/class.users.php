@@ -261,7 +261,7 @@ class Users
         }
     }
 
-    public function entry_user(string $login, string $password, int $active, string $display_name, string $email, string $name = null, string $lastname = null, string $avatar = null, string $birth = null)
+    public function entry_user(string $login, string $password, int $active, string $display_name, string $email = null, string $name = null, string $lastname = null, string $avatar = null, string $birth = null)
     {
         $invited = $this->check_inviting();
         $regdate = date("Y-m-d H:i:s");
@@ -279,12 +279,6 @@ class Users
         header('Content-Type: image/png');
         imagepng($img, __DIR__ . '/../../files/avatars/' . $img_name);
         imagedestroy($img);
-
-        if ($active == 2) {
-            $active = 1;
-        } elseif ($active == 1) {
-            $active = 0;
-        }
 
         if ($name == null) {
             $name = null;

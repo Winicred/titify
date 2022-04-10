@@ -43,6 +43,9 @@ while ($tracks = $db_response->fetch()) {
 
         $is_liked = pdo()->query("SELECT id FROM users__favorite_actions WHERE track_id = $tracks->id")->fetchColumn();
 
+        $copy_link = str_replace('files/tracks/', '', $tracks->path);
+        $copy_link = substr($copy_link, 0, strrpos($copy_link, '.'));
+
         // передача переменных в шаблон
         tpl()->set("{id}", $tracks->id);
         tpl()->set("{path}", $tracks->path);
@@ -55,7 +58,7 @@ while ($tracks = $db_response->fetch()) {
         tpl()->set("{display_name}", $tracks->display_name);
         tpl()->set("{date}", expand_date($tracks->date_add, 6));
         tpl()->set("{is_liked}", $is_liked ? 'true' : 'false');
-        tpl()->set("{track_url}", $full_site_host . 'track?name=' . str_replace('files/tracks/', '', $tracks->path));
+        tpl()->set("{track_url}", $full_site_host . 'track?name=' . $copy_link);
 
         // компиляция шаблона
         tpl()->compile('all');
@@ -84,12 +87,16 @@ while ($tracks = $db_response->fetch()) {
 
         $is_liked = pdo()->query("SELECT id FROM users__favorite_actions WHERE track_id = $tracks->id")->fetchColumn();
 
+        $copy_link = str_replace('files/tracks/', '', $tracks->path);
+        $copy_link = substr($copy_link, 0, strrpos($copy_link, '.'));
+
         // загрузка шаблона плейлиста
         tpl()->load_template('elements/profile/profile_data/popular_tracks.tpl');
 
         // передача переменных в шаблон
         tpl()->set("{id}", $tracks->id);
         tpl()->set("{track_name}", $tracks->title);
+        tpl()->set("{path}", $tracks->path);
         tpl()->set("{cover}", $tracks->cover);
         tpl()->set("{likes}", $tracks->likes);
         tpl()->set("{auditions}", $tracks->auditions);
@@ -98,7 +105,7 @@ while ($tracks = $db_response->fetch()) {
         tpl()->set("{display_name}", $tracks->display_name);
         tpl()->set("{date}", expand_date($tracks->date_add, 6));
         tpl()->set("{is_liked}", $is_liked ? 'true' : 'false');
-        tpl()->set("{track_url}", $full_site_host . 'track?name=' . str_replace('files/tracks/', '', $tracks->path));
+        tpl()->set("{track_url}", $full_site_host . 'track?name=' . $copy_link);
 
         // компиляция шаблона
         tpl()->compile('popular_tracks_data');
@@ -117,7 +124,7 @@ if (tpl()->result['popular_tracks_data'] == '') {
 }
 
 // получить все треки (3-ая вкладка)
-$db_response = pdo()->prepare("SELECT tracks.id, tracks.title, tracks.path, tracks.cover, tracks.likes, tracks.auditions, tracks.reposts, tracks.comments, tracks.private, tracks.date_add, users.display_name FROM tracks LEFT JOIN users ON tracks.author = users.id WHERE tracks.author = :user_id AND tracks.private != 1 LIMIT 20");
+$db_response = pdo()->prepare("SELECT tracks.id, tracks.title, tracks.path, tracks.cover, tracks.likes, tracks.auditions, tracks.reposts, tracks.comments, tracks.private, tracks.date_add, users.display_name FROM tracks LEFT JOIN users ON tracks.author = users.id WHERE tracks.author = :user_id AND tracks.private != 1 ORDER BY tracks.date_add DESC LIMIT 20");
 $db_response->setFetchMode(PDO::FETCH_OBJ);
 $db_response->execute([':user_id' => $profile->id]);
 
@@ -130,9 +137,13 @@ while ($tracks = $db_response->fetch()) {
         // загрузка шаблона плейлиста
         tpl()->load_template('elements/profile/profile_data/tracks.tpl');
 
+        $copy_link = str_replace('files/tracks/', '', $tracks->path);
+        $copy_link = substr($copy_link, 0, strrpos($copy_link, '.'));
+
         // передача переменных в шаблон
         tpl()->set("{id}", $tracks->id);
         tpl()->set("{track_name}", $tracks->title);
+        tpl()->set("{path}", $tracks->path);
         tpl()->set("{cover}", $tracks->cover);
         tpl()->set("{likes}", $tracks->likes);
         tpl()->set("{auditions}", $tracks->auditions);
@@ -141,7 +152,7 @@ while ($tracks = $db_response->fetch()) {
         tpl()->set("{display_name}", $tracks->display_name);
         tpl()->set("{date}", expand_date($tracks->date_add, 6));
         tpl()->set("{is_liked}", $is_liked ? 'true' : 'false');
-        tpl()->set("{track_url}", $full_site_host . 'track?name=' . str_replace('files/tracks/', '', $tracks->path));
+        tpl()->set("{track_url}", $full_site_host . 'track?name=' . $copy_link);
 
         // компиляция шаблона
         tpl()->compile('tracks_data');
@@ -183,6 +194,7 @@ while ($playlists = $db_response->fetch()) {
                 tpl()->set('{name}', $playlists_tracks->title);
                 tpl()->set('{auditions}', $playlists_tracks->auditions);
                 tpl()->set('{path}', $playlists_tracks->path);
+                tpl()->set('{title}', 'Click to play');
                 tpl()->set('{index}', $index);
 
                 tpl()->compile('playlists_tracks_data');
@@ -217,6 +229,7 @@ while ($playlists = $db_response->fetch()) {
         tpl()->set("{date}", expand_date($playlists->date_add, 6));
         tpl()->set("{is_liked}", $is_liked ? 'true' : 'false');
         tpl()->set("{tracks}", tpl()->result['playlists_tracks_data']);
+        tpl()->set("{playlist_url}", $full_site_host . 'playlist?name=' . $playlists->name . '&user_id=' . $playlists->author_id);
 
         // компиляция шаблона
         tpl()->compile('playlists_data');

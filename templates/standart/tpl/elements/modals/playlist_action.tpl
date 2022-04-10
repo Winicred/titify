@@ -17,21 +17,19 @@
                 <div class="tab-content" id="nav-tabContent">
                     <div class="tab-pane fade show active" id="add_to_playlist_panel" role="tabpanel"
                          aria-labelledby="add_to_playlist">
-                        <form>
-                            <div class="mb-3">
-                                <label for="recipient-name" class="col-form-label">Search:</label>
-                                <input type="text" class="form-control" id="playlists">
-                            </div>
-                            <div class="mb-3 search_playlists_result" track-id="{track_id}">
-
-                            </div>
-                        </form>
+                        <div class="mb-3">
+                            <label for="recipient-name" class="col-form-label">Search:</label>
+                            <input type="text" class="form-control" id="playlists_modal_find">
+                        </div>
+                        <div class="mb-3 search_playlists_result" track-id="{track_id}">
+                            <div class="no_results">No results</div>
+                        </div>
                     </div>
                     <div class="tab-pane fade w-100" id="create_new_playlist_panel" role="tabpanel"
                          aria-labelledby="create_new_playlist">
                         <div class="mb-3">
                             <label for="playlist_title-name" class="col-form-label">Title:</label>
-                            <input type="text" class="form-control" id="playlist_title">
+                            <input type="text" class="form-control" id="playlist_title" maxlength="100">
                         </div>
                         <div class="mb-2">
                             <span>Playlist will be:</span>
@@ -51,34 +49,27 @@
             </div>
 
             <div class="modal-footer">
+                <span class="modal_result"></span>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="create_playlist();">
+                <button type="button" class="btn btn-primary" onclick="create_playlist();">
                     Create
                 </button>
             </div>
         </div>
     </div>
+
+    <script>
+        find_user_playlists({track_id}, $('#playlists_modal_find').val());
+        keyboard_event('#playlists_modal_find', 'find_user_playlists({track_id}, $(\'#playlists_modal_find\').val());');
+
+        $('.modal-footer button:last-child').attr('disabled', true);
+
+        $('.list-group').on('click', 'a', function () {
+            if ($(this).attr('id') === "create_new_playlist") {
+                $('.modal-footer button:last-child').attr('disabled', false);
+            } else {
+                $('.modal-footer button:last-child').attr('disabled', true);
+            }
+        });
+    </script>
 </div>
-
-<style>
-    .list-group-item {
-        border: none;
-        width: auto !important;
-    }
-
-    .list-group-item.active {
-        background: transparent;
-        color: var(--main-color);
-        font-weight: bold;
-    }
-
-    .search_playlists_result {
-        min-height: 200px;
-        max-height: 200px;
-        overflow-y: auto;
-    }
-</style>
-
-<script>
-    keyboard_event('#playlists', 'find_user_playlists();');
-</script>

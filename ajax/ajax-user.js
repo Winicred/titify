@@ -202,10 +202,10 @@ function send_new_pass() {
     data['email'] = $('#email_recovery').val();
 
     // отправка данных на сервер
-    send_query('ajax/actions.php', data, (html) => {
+    send_query('ajax/actions.php', data, (result) => {
 
         // вывод результата в виде текста
-        $("#result").html(html);
+        $("#recovery_result").html(result);
     }, 'text')
 }
 
@@ -430,21 +430,9 @@ function get_tracks() {
 
     // отправка данных на сервер
     send_query('ajax/actions.php', data, (result) => {
+        console.log(result);
         $('.tracks').html(result);
     }, 'text');
-}
-
-function play_authors_tracks(track_id, author_id) {
-
-    // получение данных формы
-    data['play_authors_tracks'] = 1;
-    data['track_id'] = track_id;
-    data['author_id'] = author_id;
-
-    // отправка данных на сервер
-    send_query('ajax/actions.php', data, (result) => {
-        play(result.current_track.path)
-    });
 }
 
 function play_random_tracks() {
@@ -452,32 +440,14 @@ function play_random_tracks() {
 
     // отправка данных на сервер
     send_query('ajax/actions.php', data, (result) => {
-        if (random_track_query.length === 0) {
-            get_track_info(result.path[0])
-        }
-
-        for (let i = 0; i < result.path.length; i++) {
-            random_track_query.push(result.path[i])
-        }
-
-        sessionStorage.setItem('random_track_query', JSON.stringify(random_track_query));
-    });
-
-}
-
-function append_music_to_query(track_id) {
-
-    data['append_music_to_query'] = 1;
-    data['track_id'] = track_id;
-
-    // отправка данных на сервер
-    send_query('ajax/actions.php', data, (result) => {
-        append_track_query(result.path)
-
-        if (track_query.length === 1) {
-            play();
+        if (result.status === 'success') {
+            for (let i = 0; i < result.path.length; i++) {
+                random_track_query.push(result.path[i]);
+            }
+            sessionStorage.setItem('random_track_query', JSON.stringify(random_track_query));
         }
     });
+
 }
 
 function call_modal(modal, data_array = null) {
@@ -503,7 +473,7 @@ function get_track_info(track) {
         $('.player_song').children().attr('src', result.image);
 
         $('.player_song .player_song_author .player_song_author_title').attr('onclick', 'load_template("track", {name: "' + (result.path).replace('files/tracks/', '') + '"})');
-        $('.player_song .player_song_author .player_song_author_title').text(result.title);
+        $('.player_song .player_song_author .player_song_author_title').text((result.title).replaceAll('&amp;', '&').replaceAll('&quot;', '"').replaceAll('&#039;', '\'').replaceAll('&amp;', '&').replaceAll('&quot;', '"').replaceAll('&#039;', '\''));
 
         $('.player_song .player_song_author .player_song_author_name').attr('onclick', 'load_template("profile", {id: ' + result.author_id + '})');
         $('.player_song .player_song_author .player_song_author_name').text(result.author);
@@ -603,6 +573,42 @@ function add_favorite_track(id, type = 'track') {
     });
 }
 
+function set_like_to_track(element, src = null) {
+    data['set_like_to_track'] = 1;
+
+    if (src) {
+        data['track'] = src;
+    } else {
+        data['track'] = $('#btn_play').attr('data-src');
+    }
+
+    send_query('ajax/actions.php', data, (result) => {
+        if (result.status === 'success') {
+            if (!src) {
+                if ($(element).hasClass('active')) {
+                    $(element).removeClass('active');
+                    $(element).find('i').removeClass('fa-solid').addClass('fa-regular');
+
+                    set_title($(element), 'Like it!')
+                    $(element).tooltip('show');
+                } else {
+                    $(element).addClass('active');
+                    $(element).find('i').removeClass('fa-regular').addClass('fa-solid');
+
+                    set_title($(element), 'Dislike it!')
+                    $(element).tooltip('show');
+                }
+            } else {
+                if ($(element).text() === 'Like Track') {
+                    $(element).text('Dislike Track');
+                } else {
+                    $(element).text('Like Track');
+                }
+            }
+        }
+    });
+}
+
 function load_tracks_likes(id) {
     data['load_tracks_likes'] = 1;
     data['id'] = id;
@@ -614,15 +620,46 @@ function load_tracks_likes(id) {
     });
 }
 
+function load_playlist_likes(id) {
+    data['load_playlist_likes'] = 1;
+    data['id'] = id;
+
+    send_query('ajax/actions.php', data, (result) => {
+        if (result.status === 'success') {
+            $('.track_likes_list').html(result.data);
+        }
+    });
+}
+
+function load_playlist_reposts(id) {
+    data['load_playlist_reposts'] = 1;
+    data['id'] = id;
+
+    send_query('ajax/actions.php', data, (result) => {
+        if (result.status === 'success') {
+            $('.track_reposts_list').html(result.data);
+        }
+    });
+}
+
+function load_other_users_playlists(user_id) {
+    data['load_other_users_playlists'] = 1;
+    data['user_id'] = user_id;
+
+    send_query('ajax/actions.php', data, (result) => {
+        if (result.status === 'success') {
+            $('.other_playlists_list').html(result.data);
+        }
+    });
+}
+
 function open_playlist(playlist_id) {
     data['open_playlist'] = 1;
     data['playlist_id'] = playlist_id;
 
     send_query('ajax/actions.php', data, (result) => {
-        if (result !== '') {
-            $('main').append(result);
-            open_playlist_window();
-        }
+        $('body main > .container').append(result);
+        open_playlist_window();
     }, 'text');
 }
 
@@ -636,7 +673,7 @@ function find_tracks() {
             if ($('#find_tracks_input').val() === '') {
                 $('.input_search .search_icon').attr('onclick', '');
             } else {
-                $('.input_search .search_icon').attr('onclick', 'go_to("search?data=' + $('#find_tracks_input').val() + '")');
+                $('.input_search .search_icon').attr('onclick', "load_template('search', {data: '" + $('#find_tracks_input').val() + "'})");
             }
 
             $('.find_tracks_results').addClass('active').html(result);
@@ -665,7 +702,6 @@ function confirm_track() {
         e.stopPropagation();
     });
     send_query('ajax/actions_auth.php', data, (result) => {
-        console.log(result);
         if (result.status === 'success') {
             console.log('ok');
         }
@@ -673,7 +709,9 @@ function confirm_track() {
 }
 
 function set_comment_to_track(id, comment) {
-    if (/^[a-zA-Z0-9]+$/.test(comment)) {
+    var regex = /[а-яА-Яa-zA-Z0-9_]/;
+
+    if (regex.test(comment)) {
         data['set_comment_to_track'] = 1;
         data['id'] = id;
         data['comment'] = comment;
@@ -682,13 +720,15 @@ function set_comment_to_track(id, comment) {
             if (result.status === 'success') {
                 let element = $('.comments[data-id=' + id + ']');
                 $(element).find('span').html(parseInt($(element).find('span').html()) + 1);
+                load_track_comment(id);
             }
         });
     }
 }
 
-function default_cover() {
+function default_cover(id) {
     data['default_cover'] = 1;
+    data['id'] = id;
 
     send_query('ajax/actions_auth.php', data, (result) => {
         if (result.status === 'success') {
@@ -705,7 +745,6 @@ function upload_file(file) {
     Dropzone.discover();
 
     send_query('ajax/actions_auth.php', data, (result) => {
-        console.log(result);
         if (result.status === 'success') {
             console.log('ok');
         }
@@ -725,10 +764,10 @@ function load_track_comment(track_id) {
     });
 }
 
-function edit_track_comment(id, comment) {
+function edit_track_comment(id) {
     data['edit_track_comment'] = 1;
     data['id'] = id;
-    data['comment'] = comment;
+
 
     send_query('ajax/actions_auth.php', data, (result) => {
         if (result.status === 'success') {
@@ -749,9 +788,9 @@ function delete_comment(id) {
             let element = $('.comment_item[data-id=' + id + ']');
             $(element).remove();
 
-            load_track_comment(id);
-
             $('#delete_track_comment').modal('hide');
+
+            load_track_comment($('.comment_field input').attr('id'));
         }
     });
 }
@@ -788,6 +827,46 @@ function very_user(id, element) {
     });
 }
 
+function send_very_request(element, id) {
+    data['send_very_request'] = 1;
+
+    if (id) {
+        data['id'] = id;
+    }
+
+    send_query('ajax/actions_auth.php', data, (result) => {
+        console.log(result)
+        if (result.status === 'success') {
+            $(element).attr('disabled', 'disabled');
+            $(element).html('Request has been sent');
+            $(element).attr('onclick', 'cancel_very_request($(this))');
+            setTimeout(() => {
+                $(element).removeAttr('disabled');
+            }, 2000);
+        }
+    });
+}
+
+function cancel_very_request(element, id) {
+    data['cancel_very_request'] = 1;
+
+    if (id) {
+        data['id'] = id;
+    }
+
+    send_query('ajax/actions_auth.php', data, (result) => {
+        console.log(result)
+        if (result.status === 'success') {
+            $(element).attr('disabled', 'disabled');
+            $(element).html('Send verification request');
+            $(element).attr('onclick', 'send_very_request($(this))');
+            setTimeout(() => {
+                $(element).removeAttr('disabled');
+            }, 2000);
+        }
+    });
+}
+
 function create_playlist() {
     data['create_playlist'] = 1;
     data['name'] = $('#playlist_title').val();
@@ -800,14 +879,20 @@ function create_playlist() {
     }
 
     send_query('ajax/actions_auth.php', data, (result) => {
+        console.log(result)
         if (result.status === 'success') {
-            // $('#playlist_action').modal('hide')
+            $('#playlist_action').modal('hide')
+        } else {
+            $('.modal_result').addClass('text-danger');
+            $('.modal_result').html(result.message);
         }
     });
 }
 
-function find_user_playlists() {
+function find_user_playlists(id, name) {
     data['find_user_playlists'] = 1;
+    data['id'] = id;
+    data['name'] = name;
 
     send_query('ajax/actions_auth.php', data, (result) => {
         if (result.status === 'success') {
@@ -823,7 +908,8 @@ function add_track_to_playlist(playlist_id, track_id) {
 
     send_query('ajax/actions_auth.php', data, (result) => {
         if (result.status === 'success') {
-            $('#add_track_to_playlist').modal('hide');
+            $('.playlist_action button[data-id="' + playlist_id + '"]').attr('disabled', 'disabled');
+            $('.playlist_action button[data-id="' + playlist_id + '"]').html('Added');
         }
     });
 }
@@ -886,6 +972,145 @@ function delete_playlist(id, password) {
         if (result.status === 'success') {
             get_library_playlists();
             $('#accept_delete_playlist').modal('hide');
+        } else {
+            $('.modal_result').addClass('text-danger');
+            $('.modal_result').text(result.message);
+        }
+    });
+}
+
+// upload track
+function upload_track() {
+    data['upload_track'] = 1;
+    data['name'] = $('#track-name').val();
+    if ($('#default_option div p').text() === 'Custom') {
+        data['genre'] = $('#custom_input').val();
+    } else {
+        data['genre'] = $('#default_option div p').text();
+    }
+    data['file'] = $('#track_input').attr('data-src');
+    data['image'] = $('#track_image').attr('data-src');
+    data['description'] = $('#description').val();
+    // get checked radio
+    let radios = document.getElementsByName('choice');
+    for (let i = 0; i < radios.length; i++) {
+        if (radios[i].checked) {
+            data['privacy'] = radios[i].value;
+        }
+    }
+
+    if (data['image'] === undefined || data['image'] === '') {
+        data['image'] = 'files/track_covers/default.png';
+    }
+
+    send_query('ajax/actions_auth.php', data, (result) => {
+        if (result.status === 'success') {
+            $('.modal_result').addClass('text-success');
+            $('.modal_result').text(result.message);
+                window.location.href = 'track?name=' + ($('#track_input').attr('data-src')).replace('files/tracks/', '');
+        } else {
+            $('.modal_result').addClass('text-danger');
+            $('.modal_result').text(result.message);
+        }
+    });
+}
+
+function block_user(id, element) {
+    data['block_user'] = 1;
+    data['id'] = id;
+
+    const old_text = $(element).find('span').text();
+    const splitted_text = old_text.split(' ');
+    const name = splitted_text[1];
+
+    send_query('ajax/actions_auth.php', data, (result) => {
+        if (result.status === 'success') {
+            if (result.blocked) {
+                $(element).find('span').html(`Unblock <b>${name}</b>`);
+                set_title($(element), `Unblock ${name}`);
+                $(element).tooltip('show');
+            } else {
+                $(element).find('span').html(`Block <b>${name}</b>`);
+                set_title($(element), `Block ${name}`);
+                $(element).tooltip('show');
+            }
+        }
+    });
+}
+
+function report_user(id) {
+    data['report_user'] = 1;
+    data['id'] = id;
+    data['reason'] = $('#reason').val();
+
+    if ($('#reason').val() === 'Other') {
+        data['other_reason'] = $('#other_reason').val();
+    }
+
+    data['report_text'] = $('#report_text').val();
+
+    data['is_need_to_block'] = $('#is_need_to_block').is(':checked');
+
+    send_query('ajax/actions_auth.php', data, (result) => {
+        if (result.status === 'success') {
+            $('.modal_result').removeClass('text-danger');
+            $('.modal_result').addClass('text-success');
+            $('.modal_result').text(result.message);
+            $('.modal-footer button').attr('disabled', 'disabled');
+        } else {
+            $('.modal_result').removeClass('text-success');
+            $('.modal_result').addClass('text-danger');
+            $('.modal_result').text(result.message);
+        }
+    });
+}
+
+function edit_track(id) {
+    data['edit_track'] = 1;
+    data['id'] = id;
+    data['title'] = $('#title').val();
+    data['genre'] = $('#genre').val();
+    data['description'] = $('#description').val();
+
+    const radios = document.getElementsByName('privacy');
+    for (let i = 0; i < radios.length; i++) {
+        if (radios[i].checked) {
+            data['privacy'] = radios[i].value;
+        }
+    }
+
+    send_query('ajax/actions_auth.php', data, (result) => {
+        if (result.status === 'success') {
+            $('.modal_result').removeClass('text-danger');
+            $('.modal_result').addClass('text-success');
+            $('.modal_result').text(result.message);
+
+            load_template('track', {name: result.track_name})
+        } else {
+            $('.modal_result').removeClass('text-success');
+            $('.modal_result').addClass('text-danger');
+            $('.modal_result').text(result.message);
+        }
+    });
+}
+
+function delete_track(id) {
+    data['delete_track'] = 1;
+    data['id'] = id;
+
+    send_query('ajax/actions_auth.php', data, (result) => {
+        if (result.status === 'success') {
+            $('.modal_result').removeClass('text-danger');
+            $('.modal_result').addClass('text-success');
+            $('.modal_result').text(result.message);
+
+            setInterval(() => {
+                load_template('profile', {id: [result.user_id]});
+            }, 2000);
+        } else {
+            $('.modal_result').removeClass('text-success');
+            $('.modal_result').addClass('text-danger');
+            $('.modal_result').text(result.message);
         }
     });
 }

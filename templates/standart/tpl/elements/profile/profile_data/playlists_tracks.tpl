@@ -1,5 +1,5 @@
 {if ('{message}' == '')}
-    <div class="mini_playlists_tracks_item">
+    <div class="mini_playlists_tracks_item" onclick="player_play('{path}')" data-bs-toggle="tooltip" data-bs-placement="right" title="{title}">
         <img src="{cover}" alt="{name}">
         <span class="index">{index}.</span>
         <span class="name">{name}</span>

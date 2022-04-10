@@ -57,7 +57,9 @@
                         <option value="Indicate gender" hidden>Indicate gender</option>
                         <option value="Female" {if('{gender}' == "Female")}selected{/if}>Female</option>
                         <option value="Male" {if('{gender}' == "Male")}selected{/if}>Male</option>
-                        <option value="Prefer not to say" {if('{gender}' == "Prefer not to say")}selected{/if}>Prefer not to say</option>
+                        <option value="Prefer not to say" {if('{gender}' == "Prefer not to say")}selected{/if}>Prefer
+                            not to say
+                        </option>
                     </select>
                 </div>
             </div>
@@ -105,19 +107,13 @@
                     </div>
                 </div>
             </div>
-            <div class="profile_settings_content_item">
-                <div class="profile_settings_content_item_field very_field">
-                    <div class="profile_settings_content_item_field_very_field_title">
-                        <label for="very">Verification Badge</label>
-                        {include file='elements/verification/verification.tpl'}
-                    </div>
-                    {if ('{id}' == '{user_id}')}
-                        {if ('{is_very}' != 'true')}
-                            <button disabled>You are not verified</button>
-                        {else}
-                            <button disabled>You are verified</button>
-                        {/if}
-                    {else}
+            {if (is_worthy('f') && '{user_id}' != '{id}')}
+                <div class="profile_settings_content_item">
+                    <div class="profile_settings_content_item_field very_field">
+                        <div class="profile_settings_content_item_field_very_field_title">
+                            <label for="very">Verification Badge</label>
+                            {include file='elements/verification/verification.tpl'}
+                        </div>
                         {if (is_worthy('f'))}
                             {if ('{is_very}' == 'true')}
                                 <button onclick="unvery_user({id}, $(this))">Unverify user</button>
@@ -126,20 +122,21 @@
                             {/if}
                         {else}
 
-                            {if ('{is_very}' != 'true')}
-                                <button onclick="send_very_request($(this))">Send verification request</button>
+                            {if ('{is_very}' == 'true')}
+                                <button disabled>You are verified</button>
                             {else}
                                 {if ('{is_very_request}' == 'true')}
-                                    <button onclick="cancel_very_request({id})">Request has been sent</button>
+                                    <button onclick="cancel_very_request($(this))">Request has been sent</button>
                                 {else}
-                                    <button disabled>You are verified</button>
+                                    <button onclick="send_very_request($(this))">Send verification request</button>
                                 {/if}
                             {/if}
                         {/if}
-                    {/if}
-                    <span class="very_result"></span>
+                        <span class="very_result"></span>
+                    </div>
                 </div>
-            </div>
+            {/if}
+
             <div class="profile_settings_content_item">
                 <div class="profile_settings_content_item_field account_delete_field">
                     <label>Account</label>

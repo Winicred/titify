@@ -1,4 +1,3 @@
-
 <div class="playlists_container">
     <div class="playlist_preview">
         <div class="playlist_title">Recently played</div>
@@ -26,6 +25,7 @@
     </div>
     <div class="playlist_preview">
         <div class="playlist_title">My playlists</div>
+        <div class="playlist_pretitle">(click to edit)</div>
         <div class="my_playlists item_container">
             {if ('{my_playlists}' == '')}
                 <div class="empty_message">
@@ -59,9 +59,13 @@
     body main > .container .playlists_container .playlist_preview .playlist_title {
         font-size: 1.5rem;
         font-weight: bold;
-        padding-bottom: 10px;
-        margin-bottom: 10px;
-        border-bottom: 1px solid var(--extra-light-gray-color);
+    }
+
+    body main > .container .playlists_container .playlist_preview .playlist_pretitle {
+        font-size: 0.8rem;
+        color: var(--light-gray-color);
+        margin-top: 5px;
+        user-select: none;
     }
 
     body main > .container .playlists_container .playlist_preview .item_container {
@@ -69,6 +73,8 @@
         display: flex;
         min-height: 250px;
         align-items: stretch;
+        border-top: 1px solid var(--extra-light-gray-color);
+        margin-top: 10px;
     }
 
     body main > .container .playlists_container .playlist_preview .item_container .empty_message {
@@ -99,7 +105,6 @@
         align-items: center;
     }
 
-
     body main > .container .playlists_container .playlist_preview .item_container .playlist_item .playlist_item_img img {
         width: 100%;
     }
@@ -110,7 +115,7 @@
         margin-top: 10px;
     }
 
-    body main > .container .playlists_container .playlist_preview .item_container .playlist_item .playlist_item_description span {
+    body main > .container .playlists_container .playlist_preview .item_container .playlist_item .playlist_item_description > a {
         font-weight: bold;
         -ms-text-overflow: ellipsis;
         -o-text-overflow: ellipsis;
@@ -124,5 +129,59 @@
         word-wrap: break-word;
         -webkit-box-orient: vertical;
         box-orient: vertical;
+        transition: var(--transition);
     }
+
+    body main > .container .playlists_container .playlist_preview .item_container .playlist_item .playlist_item_description > a:hover {
+        color: var(--main-color);
+    }
+
+    body main > .container .playlists_container .playlist_preview .item_container .playlist_item .playlist_item_description .playlist_item_description_author {
+        display: flex;
+    }
+
+    body main > .container .playlists_container .playlist_preview .item_container .playlist_item .playlist_item_description .playlist_item_description_author a {
+        text-decoration: none;
+        color: var(--gray-color);
+        font-size: 0.8rem;
+        position: relative;
+        transform: var(--transition);
+        -ms-text-overflow: ellipsis;
+        -o-text-overflow: ellipsis;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        -ms-line-clamp: 1;
+        -webkit-line-clamp: 1;
+        line-clamp: 1;
+        display: -webkit-box;
+        display: box;
+        word-wrap: break-word;
+        -webkit-box-orient: vertical;
+        box-orient: vertical;
+        margin-top: 5px;
+        transition: var(--transition);
+    }
+
+    body main > .container .playlists_container .playlist_preview .item_container .playlist_item .playlist_item_description .playlist_item_description_author a:after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        transform: scaleX(0);
+        height: 2px;
+        bottom: -3px;
+        left: 0;
+        background-color: var(--main-color);
+        transform-origin: bottom right;
+        transition: transform 0.3s ease-in-out;
+    }
+
+    body main > .container .playlists_container .playlist_preview .item_container .playlist_item .playlist_item_description .playlist_item_description_author a:hover {
+        color: var(--main-color);
+    }
+
+    body main > .container .playlists_container .playlist_preview .item_container .playlist_item .playlist_item_description .playlist_item_description_author a:hover:after {
+        transform: scaleX(1);
+        transform-origin: bottom left;
+    }
+
 </style>

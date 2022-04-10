@@ -156,22 +156,22 @@ if (is_auth()) {
         inc_notifications();
 
         // получить страницу с восстановлением пароля
-        $db_response = $pdo->query("SELECT url FROM pages WHERE name = 'recovery'");
+//        $db_response = $pdo->query("SELECT url FROM pages WHERE name = 'recovery'");
 
         // установить режим выборки
-        $db_response->setFetchMode(PDO::FETCH_OBJ);
+//        $db_response->setFetchMode(PDO::FETCH_OBJ);
 
         // выполнение запроса
-        $page_url = $db_response->fetch();
+//        $page_url = $db_response->fetch();
 
         // создание ссылки для восстановления пароля
-        $link = $full_site_host . $page_url->url . '?a=' . $user->id . '&data=' . md5($user->id . $config->salt . $user->password . $user->email . date("Y-m-d"));
+//        $link = $full_site_host . $page_url->url . '?a=' . $user->id . '&data=' . md5($user->id . $config->salt . $user->password . $user->email . date("Y-m-d"));
 
         // получить массив с сообщением
-        $invalid_ip_letter = invalid_ip_address_letter($config->name, $user->login, $link, $ip);
+//        $invalid_ip_letter = invalid_ip_address_letter($config->name, $user->login, $link, $ip);
 
         // отправить сообщение пользователю о неизвестном входе
-        send_mail($user->email, $invalid_ip_letter['subject'], $invalid_ip_letter['message'], $pdo);
+//        send_mail($user->email, $invalid_ip_letter['subject'], $invalid_ip_letter['message'], $pdo);
 
         $db_response = $pdo->prepare("UPDATE users SET ip = :ip WHERE id = :id");
         $db_response->execute([":ip" => $ip, ":id" => $_SESSION["id"]]);
@@ -199,7 +199,7 @@ $user_session = $db_response->fetch();
 if (!isset($user_session->id)) {
 
     // вставить не авторизированного пользователя в таблицу сессии
-    $db_response = $pdo->prepare("INSERT INTO sessions (ip, volume, start_date) VALUES (:ip, DEFAULT, :start_date)");
+    $db_response = $pdo->prepare("INSERT INTO sessions (ip, start_date) VALUES (:ip, :start_date)");
 
     // передача параметров id пользователя и времени
     $db_response->execute([":ip" => $ip, ":start_date" => date('Y-m-d H:i:s')]);
@@ -234,7 +234,7 @@ $tpl->set("{site_host}", $site_host);
 $tpl->compile('content');
 $tpl->clear();
 
-// запуск модулей.
+// запуск модулей
 require_once __DIR__ . '/../' . $page->file;
 
 $tpl->load_template("footer.tpl");

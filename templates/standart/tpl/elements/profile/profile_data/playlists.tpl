@@ -1,4 +1,4 @@
-<div class="profile_data_item">
+<div class="profile_data_item" data-bs-toggle="tooltip" title="Go to playlist page" data-bs-placement="left" onclick="redirect_blank_page('{playlist_url}', $(this))">
     <div class="item_image">
         <img src="{cover}" alt="{track_name}">
     </div>
@@ -52,7 +52,7 @@
                     <span>{reposts}</span>
                 </button>
 
-                <button onclick="copy_to_clipboard('{track_url}', $(this))">
+                <button onclick="copy_to_clipboard('{playlist_url}', $(this))">
                     <i class="fa-solid fa-link"></i>
                     <span>Copy link</span>
                 </button>

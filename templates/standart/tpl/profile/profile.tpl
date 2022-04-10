@@ -2,17 +2,18 @@
     <div class="profile_head_container">
         <div class="profile_head_cover cover_preview" style="background-image: url('{cover}')">
             <div class="profile_head_image_container">
-                {if ('{id}' == '{user_id}' && '{user_id}' != '')}
+                {if (('{id}' == '{user_id}' && '{user_id}' != '') || (is_auth() && is_worthy('f')))}
                     <div class="profile_edit_avatar_container">
                         <div class="profile_head_image">
                             <div class="avatar_preview main_avatar"
-                                 style="background-image: url('<?=get_user_avatar($_SESSION['id']);?>');"></div>
+                                 style="background-image: url('<?=get_user_avatar({id});?>');"></div>
                         </div>
 
                         <div class="edit_avatar">
                             <input id="avatar_input" type="file" accept="image/*">
 
-                            <button id="change_avatar_button">
+                            <button id="change_avatar_button" title="Click to edit profile avatar"
+                                    data-bs-toggle="tooltip" data-bs-placement="bottom">
                                 <i class="fa-solid fa-camera-rotate"></i>
                                 <span>Change avatar</span>
                             </button>
@@ -26,7 +27,9 @@
                     <span>
                         {if ('{deleted}' == 'true')}
                             <span class="text-decoration-line-through">{display_name}</span>
-                        {else}
+
+{else}
+
                             <span>{display_name}</span>
                         {/if}
 
@@ -38,16 +41,16 @@
             </div>
 
             {if (is_auth())}
-                {if ('{id}' == '{user_id}' || is_worthy('f'))}
+                {if (is_worthy('f') || ('{id}' == '{user_id}' && '{user_id}' != ''))}
                     <div class="edit_cover_container">
-                        {*                    <button onclick="default_cover()">*}
-                        {*                        <i class="fa-solid fa-trash"></i>*}
-                        {*                        <span>Remove cover</span>*}
-                        {*                    </button>*}
+                        <button onclick="default_cover({id})" title="Set default cover" data-bs-toggle="tooltip">
+                            <i class="fa-solid fa-trash"></i>
+                            <span>Remove cover</span>
+                        </button>
 
                         <input id="cover_input" type="file" accept="image/*">
 
-                        <button id="change_cover_button">
+                        <button id="change_cover_button" title="Edit user cover" data-bs-toggle="tooltip">
                             <i class="far fa-edit" aria-hidden="true"></i>
                             <span>Edit cover</span>
                         </button>
@@ -58,24 +61,29 @@
 
         <div class="profile_head_navigation_container">
             <ul>
-                <li><a data-href="#all" class="active">All</a></li>
-                <li><a data-href="#popular_tracks">Popular Tracks</a></li>
-                <li><a data-href="#tracks">Tracks</a></li>
-                <li><a data-href="#playlists">Playlists</a></li>
+                <li><a data-href="#all" class="active" title="Show {display_name}'s tracks & playlists"
+                       data-bs-toggle="tooltip" data-bs-placement="bottom">All</a></li>
+                <li><a data-href="#popular_tracks" title="Show {display_name}'s popular tracks" data-bs-toggle="tooltip"
+                       data-bs-placement="bottom">Popular Tracks</a></li>
+                <li><a data-href="#tracks" title="Show {display_name}'s all uploaded tracks" data-bs-toggle="tooltip"
+                       data-bs-placement="bottom">Tracks</a></li>
+                <li><a data-href="#playlists" title="Show {display_name}'s all uploaded playlists"
+                       data-bs-toggle="tooltip" data-bs-placement="bottom">Playlists</a></li>
             </ul>
 
             <div class="profile_head_navigation_sub_tools_container">
 
                 {if (is_auth())}
                     {if ('{id}' != '{user_id}')}
-                        <button>
+                        <button title="Share {display_name} with everyone" data-bs-toggle="tooltip">
                             <i class="fa-regular fa-share-from-square"></i>
                             <span>Share</span>
                         </button>
                     {/if}
 
                     {if ('{id}' == '{user_id}' || is_worthy('f'))}
-                        <button onclick="load_template('profile', {id: {id}}, 'edit_profile')">
+                        <button onclick="load_template('profile', {id: {id}}, 'edit_profile')"
+                                title="Edit {display_name}'s profile" data-bs-toggle="tooltip">
                             <i class="fa-regular fa-pen-to-square"></i>
                             <span>Edit</span>
                         </button>
@@ -83,12 +91,14 @@
 
                     {if ('{id}' != '{user_id}')}
                         {if ('{is_followed}' == 'false')}
-                            <button onclick="follow_actions('{id}', 'follow', $(this))">
+                            <button onclick="follow_actions('{id}', 'follow', $(this))"
+                                    title="Follow to {display_name} uploads" data-bs-toggle="tooltip">
                                 <i class="fa-solid fa-plus"></i>
                                 <span>Follow</span>
                             </button>
                         {else}
-                            <button onclick="follow_actions('{id}', 'unfollow', $(this))">
+                            <button onclick="follow_actions('{id}', 'unfollow', $(this))"
+                                    title="Unfollow to {display_name} uploads" data-bs-toggle="tooltip">
                                 <i class="fa-solid fa-minus"></i>
                                 <span>Unfollow</span>
                             </button>
@@ -114,17 +124,20 @@
 
         <div class="profile_about_container">
             <div class="profile_statistics_container">
-                <a class="profile_user_data_statistics_item" onclick="load_template('users', {id: {id}})">
+                <a class="profile_user_data_statistics_item" onclick="load_template('users', {id: {id}})"
+                   title="{display_name}' followers" data-bs-toggle="tooltip">
                     <span class="title">Followers</span>
                     <span>{followers_count}</span>
                 </a>
 
-                <a class="profile_user_data_statistics_item" onclick="load_template('users', {id: {id}})">
+                <a class="profile_user_data_statistics_item" onclick="load_template('users', {id: {id}})"
+                   title="{display_name}'s followings" data-bs-toggle="tooltip">
                     <span class="title">Following</span>
                     <span>{following_count}</span>
                 </a>
 
-                <a class="profile_user_data_statistics_item" onclick="load_template('users', {id: {id}})">
+                <a class="profile_user_data_statistics_item" onclick="load_template('users', {id: {id}})"
+                   title="{display_name}'s count of uploaded tracks" data-bs-toggle="tooltip">
                     <span class="title">Tracks</span>
                     <span>{tracks_count}</span>
                 </a>
@@ -137,10 +150,12 @@
                             <span>{about}</span>
                         {else}
                             {if ('{about}' != '')}
-                                <span class="change_status_element" onclick="change_status_element()">{about}</span>
+                                <span class="change_status_element" onclick="change_status_element()"
+                                      title="Click to change status" data-bs-toggle="tooltip">{about}</span>
                             {else}
                                 <span class="change_status_element"
-                                      onclick="change_status_element()">Change your status</span>
+                                      onclick="change_status_element()" title="Click to change status"
+                                      data-bs-toggle="tooltip">Change your status</span>
                             {/if}
                         {/if}
                     {/if}
@@ -149,56 +164,63 @@
 
             <div class="profile_about_social_container">
                 {if ("{facebook}" != "")}
-                    <a href="facebook.com/profile.php?id={facebook}" target="_blank">
+                    <a href="facebook.com/profile.php?id={facebook}" target="_blank"
+                       title="Go to {display_name}'s facebook page" data-bs-toggle="tooltip">
                         <i class="fa-brands fa-facebook-square"></i>
                         <span>Facebook</span>
                     </a>
                 {/if}
 
                 {if ("{twitter}" != "")}
-                    <a href="twitter.com/{twitter}" target="_blank">
+                    <a href="twitter.com/{twitter}" target="_blank" title="Go to {display_name}'s twitter page"
+                       data-bs-toggle="tooltip">
                         <i class="fa-brands fa-twitter-square"></i>
                         <span>Twitter</span>
                     </a>
                 {/if}
 
                 {if ("{instagram}" != "")}
-                    <a href="instagram.com/{instagram}" target="_blank">
+                    <a href="instagram.com/{instagram}" target="_blank" title="Go to {display_name}'s instagram page"
+                       data-bs-toggle="tooltip">
                         <i class="fa-brands fa-instagram"></i>
                         <span>Instagram</span>
                     </a>
                 {/if}
 
                 {if ("{youtube}" != "")}
-                    <a href="youtube.com/channel/{youtube}" target="_blank">
+                    <a href="youtube.com/channel/{youtube}" target="_blank" title="Go to {display_name}'s youtube page"
+                       data-bs-toggle="tooltip">
                         <i class="fa-brands fa-youtube-square"></i>
                         <span>YouTube</span>
                     </a>
                 {/if}
 
                 {if ("{telegram}" != "")}
-                    <a href="t.me/{telegram}" target="_blank">
+                    <a href="t.me/{telegram}" target="_blank" title="Go to {display_name}'s telegram page"
+                       data-bs-toggle="tooltip">
                         <i class="fa-brands fa-telegram-plane"></i>
                         <span>Telegram</span>
                     </a>
                 {/if}
 
                 {if ("{vk}" != "")}
-                    <a href="vk.com/id{vk}" target="_blank">
+                    <a href="vk.com/id{vk}" target="_blank" title="Go to {display_name}'s vk page"
+                       data-bs-toggle="tooltip">
                         <i class="fa-brands fa-vk"></i>
                         <span>VK</span>
                     </a>
                 {/if}
 
                 {if ("{github}" != "")}
-                    <a href="github.com/{github}" target="_blank">
+                    <a href="github.com/{github}" target="_blank" title="Go to {display_name}'s github page"
+                       data-bs-toggle="tooltip">
                         <i class="fa-brands fa-github-square"></i>
                         <span>Github</span>
                     </a>
                 {/if}
 
                 {if ("{website}" != "")}
-                    <a href="{website}" target="_blank">
+                    <a href="{website}" target="_blank" title="Go to {display_name}'s website" data-bs-toggle="tooltip">
                         <i class="fa-solid fa-globe"></i>
                         <span>Website</span>
                     </a>
@@ -207,7 +229,8 @@
 
             <div class="profile_user_last_likes">
                 <div class="profile_user_last_likes_header">
-                    <span><i class="fa-solid fa-heart"></i>{likes_count} Likes</span>
+                    <span title="{display_name}'s likes" data-bs-toggle="tooltip"><i
+                                class="fa-solid fa-heart"></i>{likes_count} Likes</span>
                 </div>
 
                 <div class="profile_user_last_likes_container">
@@ -219,7 +242,6 @@
 </div>
 
 <script>
-
     // Set dominant color from image to child div
     function vibrant_background(cover_url = '{cover}') {
         const img = new Image();
@@ -289,8 +311,14 @@
                 return;
             }
 
+            if (this.files[0].type === "image/gif") {
+                alert("Image must be jpeg, png or gif.");
+                return;
+            }
+
             const data = new FormData();
             data.append("change_avatar", "1");
+            data.append("id", "{id}");
             data.append("image", this.files[0]);
 
             send_image_query('ajax/actions_auth.php', data, function (result) {
@@ -321,8 +349,14 @@
                 return;
             }
 
+            if (this.files[0].type === "image/gif") {
+                alert("Image must be jpeg, png or gif.");
+                return;
+            }
+
             const data = new FormData();
             data.append("change_cover", "1");
+            data.append("id", "{id}");
             data.append("image", this.files[0]);
 
             send_image_query('ajax/actions_auth.php', data, function (result) {

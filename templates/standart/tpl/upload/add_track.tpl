@@ -1,24 +1,55 @@
-<form enctype="multipart/form-data" action="ajax/actions_auth.php" method="POST" id="upload_track">
-    <div class="track-wrapper">
-        <div class="track-info-container">
-            <div class="track_name_container">
-                <i class="fa-solid fa-file-signature" style="margin-left: -40px; margin-right: 20px;"></i>
-                <div class="form__group field">
-                    <input type="input" class="form__field" placeholder="Track name" name="track-name" id='track-name'
-                           required/>
-                    <label for="track-name" class="form__label">Track name</label>
-                </div>
-            </div>
+<div class="track-wrapper">
+    <div class="track-info-container">
+        <div class="track_header_container">
+            <div class="file-upload">
+                <button class="file-upload-btn" type="button" onclick="$('.file-upload-input').trigger( 'click' )"
+                        data-bs-toggle="tooltip" title="Click to add image for track">Add
+                    Image
+                </button>
 
-            <div class="track_name_container mt-5">
-                <i class="fa-solid fa-file-signature" style="margin-left: -40px; margin-right: 20px;"></i>
-                <div class="form__group field">
-                    <input type="input" class="form__field" placeholder="Description" name="description"
-                           id='description'
-                           required/>
-                    <label for="track-name" class="form__label">Description</label>
+                <div class="image-upload-wrap" data-bs-toggle="tooltip"
+                     title="Drag and drop a file or select add Image">
+                    <input class="file-upload-input" type='file' id="image_input" onchange="readURL(this);"
+                           accept="image/*"/>
+                    <div class="drag-text">
+                        <h3>Drag and drop a file or select add Image</h3>
+                    </div>
+                </div>
+                <div class="file-upload-content">
+                    <img class="file-upload-image" id="track_image" src="#" data-src="" alt="your image"/>
+                    <div class="loader2">
+                        <div class="loader-wheel"></div>
+                        <div class="loader-text"></div>
+                    </div>
+                    <div class="image-title-wrap">
+                        <button type="button" onclick="removeUpload()" class="remove-image">Remove <span
+                                    class="image-title">Uploaded Image</span></button>
+                    </div>
                 </div>
             </div>
+            <div class="inputs">
+                <div class="track-name-container">
+                    <i class="fa-solid fa-file-signature" style="margin-left: -40px; margin-right: 20px;"></i>
+                    <div class="form__group field">
+                        <input type="input" class="form__field" placeholder="Track name" name="track-name"
+                               id='track-name'
+                               data-bs-toggle="tooltip" title="Your track name" required/>
+                        <label for="track-name" class="form__label">Track name</label>
+                    </div>
+                </div>
+                <div class="track-description-container">
+                    <i class="fa-solid fa-file-signature" style="margin-left: -40px; margin-right: 20px;"></i>
+                    <div class="form__group field">
+                        <input type="input" class="form__field" placeholder="Description" name="description"
+                               data-bs-toggle="tooltip" title="Your track description"
+                               id='description'
+                               required/>
+                        <label for="track-name" class="form__label">Description</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="track-info-footer">
             <div class="track_genre_container">
                 <div class="wrapper">
                     <div class="title">
@@ -237,71 +268,56 @@
                     <i class="fa-solid fa-unlock" style="margin-right: 21%; margin-left: -21%;"></i>
                     <div class="container_switch">
                         <div class="toggle">
-                            <input type="radio" id="choice1" name="choice" value="Private">
+                            <input type="radio" id="choice1" name="choice" value="Private" data-bs-toggle="tooltip"
+                                   title="Private track (no one can see it except you)">
                             <label for="choice1">Private</label>
-                            <input type="radio" id="choice2" name="choice" value="Public">
+                            <input type="radio" id="choice2" name="choice" value="Public" data-bs-toggle="tooltip"
+                                   title="Public track (everyone can see it)">
                             <label for="choice2">Public</label>
                             <div id="flap"><span class="content">Public</span></div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <section>
-            <div class="file-upload">
-                <button class="file-upload-btn" type="button" onclick="$('.file-upload-input').trigger( 'click' )">Add
-                    Image
-                </button>
-
-                <div class="image-upload-wrap">
-                    <input class="file-upload-input" type='file' id="image_input" onchange="readURL(this);"
-                           accept="image/*"/>
-                    <div class="drag-text">
-                        <h3>Drag and drop a file or select add Image</h3>
-                    </div>
-                </div>
-                <div class="file-upload-content">
-                    <img class="file-upload-image" src="#" alt="your image"/>
-                    <div class="image-title-wrap">
-                        <button type="button" onclick="removeUpload()" class="remove-image">Remove <span
-                                    class="image-title">Uploaded Image</span></button>
-                    </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <button onclick="upload_track()" class="btn btn-primary pull-right" data-bs-toggle="tooltip"
+                            title="Click to upload track">Upload
+                    </button>
                 </div>
             </div>
-            <div class="music-upload">
-                <button class="music-upload-btn" type="button"
-                        onclick="$('.music-upload-input').trigger( 'click' )">Add
-                    Music file
-                </button>
-
-                <div class="music-upload-wrap">
-                    <input class="music-upload-input" type='file' id="track_input" onchange="readURL_music(this);"
-                           accept=".mp3,audio/*"/>
-                    <div class="drag-text">
-                        <h3>Drag and drop a file or select add Music file</h3>
-                    </div>
-                </div>
-                <div class="music-upload-content">
-                        <img class="file-upload-music" src="#" alt="your music"/>
-                        <div class="loader">
-                            <div class="loader-wheel"></div>
-                            <div class="loader-text"></div>
-                        </div>
-                    <div class="music-title-wrap">
-                        <button type="button" onclick="removeUpload_music()" class="remove-music">Remove <span
-                                    class="music-title">Uploaded Music</span></button>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <div class="row">
-        <div class="col-md-12">
-            <button type="submit" class="btn btn-primary pull-right">Upload</button>
         </div>
     </div>
-</form>
+    <section>
+        <div class="music-upload">
+            <div class="music-upload-wrap" data-bs-toggle="tooltip"
+                 title="Drag and drop a file or select add Music file">
+                <input class="music-upload-input" type='file' data-src="" id="track_input"
+                       onchange="readURL_music(this);"
+                       accept=".mp3,audio/*"/>
+                <div class="drag-text">
+                    <h3>Drag and drop a file or select add Music file</h3>
+                    <button class="music-upload-btn" type="button"
+                            onclick="$('.music-upload-input').trigger( 'click' )">Add
+                        Music file
+                    </button>
+                </div>
+            </div>
+            <div class="music-upload-content">
+                <img class="file-upload-music" src="#" alt="your music" data-bs-toggle="tooltip"
+                     title="Your track cover preview"/>
+                <div class="loader">
+                    <div class="loader-wheel"></div>
+                    <div class="loader-text"></div>
+                </div>
+                <div class="music-title-wrap">
+                    <button type="button" onclick="removeUpload_music()" class="remove-music">Remove <span
+                                class="music-title">Uploaded Music</span></button>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
 
 <style>
 
@@ -319,8 +335,7 @@
     }
 
     .file-upload {
-        background-color: #ffffff;
-        width: 600px;
+        width: 400px;
         margin: 0 auto;
         padding: 20px;
     }
@@ -387,6 +402,11 @@
 
     .drag-text {
         text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
     }
 
     .drag-text h3 {
@@ -397,8 +417,9 @@
     }
 
     .file-upload-image {
-        max-height: 200px;
-        max-width: 200px;
+        display: none;
+        height: 250px;
+        width: 250px;
         margin: auto;
         padding: 20px;
     }
@@ -407,6 +428,7 @@
         width: 200px;
         margin: 0;
         color: #fff;
+        opacity: 0.25;
         background: #cd4535;
         border: none;
         padding: 10px;
@@ -430,38 +452,33 @@
         transition: all .2s ease;
     }
 
+    section {
+        margin: auto;
+    }
+
     .music-upload {
         background-color: #ffffff;
-        width: 600px;
+        width: 800px;
         margin: 0 auto;
-        padding: 20px;
     }
 
     .music-upload-btn {
-        width: 100%;
+        width: 50%;
         margin: 0;
         color: #fff;
         background: #A74FFF;
         border: none;
         padding: 10px;
         border-radius: 4px;
-        border-bottom: 4px solid #5701AE;
-        transition: all .2s ease;
         outline: none;
         text-transform: uppercase;
         font-weight: 700;
     }
 
     .music-upload-btn:hover {
-        background: #A74FFF;
         color: #ffffff;
         transition: all .2s ease;
         cursor: pointer;
-    }
-
-    .music-upload-btn:active {
-        border: 0;
-        transition: all .2s ease;
     }
 
     .music-upload-content {
@@ -482,6 +499,7 @@
 
     .music-upload-wrap {
         margin-top: 20px;
+        height: 400px;
         border: 4px dashed #A74FFF;
         position: relative;
     }
@@ -490,6 +508,12 @@
     .music-upload-wrap:hover {
         background-color: #A74FFF;
         border: 4px dashed #ffffff;
+    }
+
+    .music-dropping,
+    .music-upload-wrap:hover .music-upload-btn {
+        background-color: #FFFFFF;
+        color: #A74FFF;
     }
 
     .music-title-wrap {
@@ -534,6 +558,13 @@
     }
 
     .loader {
+        width: 60px;
+        margin: auto;
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
+
+    .loader2 {
         width: 60px;
         margin: auto;
         padding-top: 20px;
@@ -588,18 +619,50 @@
 
     .track-wrapper {
         display: flex;
+        width: 75%;
         flex-direction: row;
         justify-content: space-evenly;
+        margin: auto;
     }
 
-    .track_name_container {
+    .track_header_container {
+        display: flex;
+        flex-direction: row;
+
+        --x: 50%;
+        --y: 50%;
+        justify-content: space-around;
+        position: relative;
+        appearance: none;
+        padding: 1em 2em;
+        outline: none;
+        border-radius: 10px;
+
+        border: 3px solid transparent;
+        background: linear-gradient(#ffffff, #ffffff) padding-box, radial-gradient(farthest-corner at var(--x) var(--y), #c083ff, #42008a) border-box;
+    }
+
+    .track-name-container {
         display: flex;
         flex-direction: row;
         align-items: baseline;
     }
 
-    .track-info-container {
+    .track-description-container {
         display: flex;
+        flex-direction: row;
+        align-items: baseline;
+    }
+
+    .track-info-footer {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        align-items: baseline;
+    }
+
+    .track-info-container {
+        display: none;
         flex-direction: column;
         justify-content: start;
         margin: 0;
@@ -607,13 +670,21 @@
     }
 
     .track_genre_container {
-        margin-top: 25%;
+        margin-top: 2rem;
     }
 
     .track_private_container {
         display: flex;
         justify-content: center;
-        margin-top: 130%;
+        padding-top: 2rem;
+    }
+
+    .inputs {
+        padding: 0 0 0 60px;
+        width: 600px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
     }
 
     .container_switch {
@@ -886,10 +957,16 @@
 </style>
 
 <script>
-    function readURL(input) {
-        const file = input.files[0];
+    NProgress.start();
 
-        if (file) {
+    setTimeout(function () {
+        NProgress.done();
+    }, 2000);
+
+    function readURL(input) {
+        const image = input.files[0];
+
+        if (image) {
             const reader = new FileReader();
 
             reader.onload = function (event) {
@@ -898,11 +975,11 @@
                 $('.file-upload-image').attr('src', event.target.result);
                 $('.file-upload-content').show();
 
-                $('.image-title').html(file.name);
+                $('.image-title').html(image.name);
             };
 
             let data = new FormData();
-            data.append('file', file);
+            data.append('image', image);
             data.append('token', $('#token').val());
             data.append('phpaction', "1");
             data.append('upload_image_file', "1");
@@ -918,17 +995,19 @@
                 success: function (result) {
                     console.log(result)
                     if (result.status === 'success') {
-                        $('.file-upload-music').css('display', 'block');
-                        $('.remove-music').css('opacity', '1');
-                        $('.file-upload-music').attr('src', 'files/covers_for_track_types/' + str_file_type + '_icon.png');
-                        $('.loader').hide();
+                        $('.file-upload-image').css('display', 'block');
+                        $('.remove-image').css('opacity', '1');
+                        $('.loader2').hide();
+                        $('.file-upload-image').attr('data-src', result.data);
                     } else {
-                        alert('Error with upload music file');
+                        alert('Error with upload image file');
+                        // Если ошибка поставить фотографию default.png в каталоге files/track_covers/
+                        $('.file-upload-image').attr('src', 'files/track_covers/default.png');
                     }
                 }
             });
 
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(image);
 
         } else {
             removeUpload();
@@ -1015,6 +1094,9 @@
                             $('.remove-music').css('opacity', '1');
                             $('.file-upload-music').attr('src', 'files/covers_for_track_types/' + str_file_type + '_icon.png');
                             $('.loader').hide();
+                            $('.music-upload').hide();
+                            $('.track-info-container').css('display', 'flex');
+                            $('.music-upload-input').attr('data-src', result.data);
                         } else {
                             alert('Error with upload music file');
                         }
@@ -1085,9 +1167,18 @@
         $(this).parent().toggleClass("active");
         document.getElementById('default_option').addEventListener("click", function () {
             $(".custom_input").remove();
-            $("#track_private_container").css("margin-top", "130%");
         });
     })
+
+    document.querySelector('.track_header_container').onmousemove = (e) => {
+
+        const x = e.pageX - e.target.offsetLeft
+        const y = e.pageY - e.target.offsetTop
+
+        e.target.style.setProperty('--x', `${ x }px`)
+        e.target.style.setProperty('--y', `${ y }px`)
+
+    }
 
     $(".select_ul li").on('click', function () {
         var currentele = $(this).html();
@@ -1095,8 +1186,6 @@
         $(this).parents(".select_wrap").removeClass("active");
         if ($(currentele).find('p').text() == "Custom") {
             $(".select_wrap").append('<div class="form__group custom_input field"><input type="text" class="form__field" placeholder="Write your genre here..." name="custom_input" id="custom_input" required/><label for="custom_input" class="form__label">Custom genre</label></div>');
-            // Найти элемент по id и дать ему значение margin-top: 120%;
-            $("#track_private_container").css("margin-top", "108.2%");
         } else {
             $(".custom_input").remove();
         }

@@ -15,9 +15,9 @@
                 <i class="fa-solid fa-ellipsis-vertical"></i>
             </span>
             <div class="dropdown-content">
-                <button onload="append_track_query('{track_path}')">Add To Queue</button>
-                <button onload="play('{track_path}')">Play Now</button>
-                <button onload="set_like_to_track('{track_path}')">Like Track</button>
+                <button onclick="add_to_track_query('{track_path}')">Add To Queue</button>
+                <button onclick="player_play('{track_path}')">Play Now</button>
+                <button onclick="set_like_to_track($(this), '{track_path}')">{if('{is_liked}' == 'true')}Dislike Track {else}Like Track{/if}</button>
             </div>
         </div>
     </div>

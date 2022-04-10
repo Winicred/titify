@@ -7,7 +7,7 @@ tpl()->compile('title');
 tpl()->clear();
 
 tpl()->load_template('search/search.tpl');
-tpl()->set('{search_value}', $_GET['data'] ?? '');
+tpl()->set('{search_value}', !empty($data_array) ? $data_array['data'] : $_GET['data'] ?? '');
 tpl()->compile('content');
 tpl()->clear();
 

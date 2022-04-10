@@ -111,7 +111,24 @@ function open_playlist_window() {
     setTimeout(() => {
         $('.check_playlist').addClass('active');
         $('.check_playlist').removeClass('inactive');
-        $('body main').css('overflow-y', 'hidden');
+        // add +50 margin to playlist window
+
+        // get window y position
+        let window_y = $('body main > .container').offset().top;
+        const head_panel_height = $('.head_panel').height();
+        const margin_top = head_panel_height - (window_y - 80);
+        // const margin_top = 50;
+        const height = head_panel_height - (margin_top - 120);
+
+        console.log(head_panel_height, margin_top, height);
+
+        if (window_y >= 30) {
+            $('.check_playlist.active').css('margin-top', 'calc(100vh + '+margin_top+'px)');
+            $('.check_playlist.active').css('height', 'calc(100vh - '+height+'px)');
+        } else {
+            $('.check_playlist.active').css('height', 'calc(100vh - 90px)');
+        }
+        // $('body main').css('overflow-y', 'hidden');
     }, 0)
 }
 
@@ -128,7 +145,7 @@ function set_title(element, title) {
     // change dynamic title of tooltip
     $(element).attr('data-bs-original-title', title);
     $(element).attr('title', title);
-    $(element).tooltip('show');
+    // $(element).tooltip('show');
     // element.attr('title', title).attr('data-bs-original-title', title).tooltip('update')
 }
 
@@ -164,4 +181,21 @@ function format_seconds_as_time(secs) {
     }
 
     return min + ':' + sec;
+}
+
+function redirect_blank_page(url, element) {
+    $(element).click(function (e) {
+        if (e.target !== this) {
+            return;
+        }
+        window.open(url, '_blank')
+    });
+}
+
+function get_duration(src, cb) {
+    var audio = new Audio();
+    $(audio).on("loadedmetadata", function(){
+        cb(audio.duration);
+    });
+    audio.src = src;
 }

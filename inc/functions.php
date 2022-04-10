@@ -353,6 +353,26 @@ function user_by_id($user_id = null)
     return $db_response->fetch(PDO::FETCH_OBJ);
 }
 
+function get_playlist_by_name($name = null, $user_id = null)
+{
+    $name = clean($name);
+    $user_id = clean($user_id, "int");
+
+    if (empty($name) || empty($user_id)) {
+        return null;
+    }
+
+    $db_response = pdo()->prepare("SELECT * FROM users__playlists WHERE name = :name AND user_id = :user_id");
+    $db_response->setFetchMode(PDO::FETCH_OBJ);
+    $db_response->execute([':name' => $name, ':user_id' => $user_id]);
+
+    if (!$db_response->rowCount()) {
+        return null;
+    }
+
+    return $db_response->fetch();
+}
+
 function playlists_by_user_id($user_id = null)
 {
     $user_id = clean($user_id, "int");
@@ -370,7 +390,8 @@ function playlists_by_user_id($user_id = null)
     return $db_response->fetch(PDO::FETCH_OBJ);
 }
 
-function get_playlist_by_id(int $id) {
+function get_playlist_by_id(int $id)
+{
     $id = clean($id, "int");
 
     if (empty($id)) {
@@ -386,7 +407,8 @@ function get_playlist_by_id(int $id) {
     return $db_response->fetch(PDO::FETCH_OBJ);
 }
 
-function get_playlist_tracks(int $id) {
+function get_playlist_tracks(int $id)
+{
     $id = clean($id, "int");
 
     if (empty($id)) {
@@ -454,7 +476,7 @@ function get_month($i, $type = 1): string
             6 => 'june',
             7 => 'july',
             8 => 'august',
-            9 => 'septebmer',
+            9 => 'september',
             10 => 'october',
             11 => 'november',
             12 => 'december');
@@ -648,7 +670,10 @@ function generation_name($name = null): string
         return md5(date("YmdHis") . time());
     }
 
-    return (md5(date("YmdHis") . time() . $name) . '_' . $name);
+    // разделить расширение файла
+    $ext = pathinfo($name, PATHINFO_EXTENSION);
+
+    return (md5(date("YmdHis") . time()) . "." . $ext);
 }
 
 
@@ -825,12 +850,12 @@ function get_welcome_message(): string
 function get_track_by_src($src, $replace = false)
 {
     if (empty($src)) {
-        return ['alert' => 'error', 'message' => 'Не указаны параметры'];
+        return ['alert' => 'error', 'message' => 'Please write a valid source'];
     }
 
     if ($replace) {
         $src = str_replace('/files/tracks/', '', $src);
-        $db_response = pdo()->query("SELECT * FROM tracks WHERE path = 'files/tracks/$src'");
+        $db_response = pdo()->query("SELECT * FROM tracks WHERE path LIKE 'files/tracks/$src%'");
     } else {
         $db_response = pdo()->query("SELECT * FROM tracks WHERE path = '$src'");
     }
@@ -840,10 +865,8 @@ function get_track_by_src($src, $replace = false)
     if ($db_response->rowCount() > 0) {
         return $db_response->fetch();
     } else {
-        show_error_page();
+        return ['alert' => 'error', 'message' => 'Track not found'];
     }
-
-    return false;
 }
 
 function get_total_track_auditions_count_by_author($author_id)
@@ -882,7 +905,7 @@ function get_total_track_count_by_author($author_id)
 
 function get_author_by_track_id($track_id)
 {
-    $db_response = pdo()->query("SELECT users.* FROM tracks LEFT JOIN users ON users.id = tracks.author WHERE tracks.author = $track_id");
+    $db_response = pdo()->query("SELECT users.* FROM tracks LEFT JOIN users ON users.id = tracks.author WHERE tracks.id = $track_id");
     $db_response->setFetchMode(PDO::FETCH_OBJ);
     return $db_response->fetch();
 }
@@ -965,7 +988,8 @@ function get_rand_number_result(): bool
     }
 }
 
-function tracks_by_history(int $user_id) {
+function tracks_by_history(int $user_id)
+{
     if (empty($user_id)) {
         return ['alert' => 'error', 'message' => 'Please specify user id'];
     }

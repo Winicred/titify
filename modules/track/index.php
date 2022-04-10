@@ -3,11 +3,12 @@
 tpl()->result['in_other_playlists_data'] = '';
 
 $track = get_track_by_src((!empty($data_array) ? $data_array['name'] : $_GET['name']), true);
-$author = get_author_by_track_id($track->author);
 
-if (empty($track)) {
+if (is_array($track) && $track['alert']) {
     show_error_page();
 }
+
+$author = get_author_by_track_id($track->id);
 
 // получить плейлисты, в которых есть трек
 $db_response = pdo()->prepare("SELECT users__playlists.id, users__playlists.name, users__playlists.cover, users.id AS author_id, users.display_name, users__playlists.date_add, users__playlists.likes, users__playlists.auditions, users__playlists.comments, users__playlists.reposts FROM users__playlists_tracks LEFT JOIN users__playlists ON users__playlists_tracks.playlist_id = users__playlists.id LEFT JOIN users ON users__playlists.user_id = users.id WHERE users__playlists_tracks.track_id = :track_id AND users__playlists.id IS NOT NULL GROUP BY users__playlists_tracks.id DESC LIMIT 0, 3");
@@ -22,7 +23,6 @@ while ($playlists = $db_response->fetch()) {
 
     // передача переменных в шаблон
     tpl()->set("{cover}", $playlists->cover);
-    tpl()->set("{name}", $playlists->name);
     tpl()->set("{name}", $playlists->name);
     tpl()->set("{author}", $playlists->display_name);
     tpl()->set("{author_id}", $playlists->author_id);
@@ -64,6 +64,7 @@ tpl()->load_template('track/track.tpl');
 tpl()->set('{user_id}', $_SESSION['id'] ?? '');
 tpl()->set('{id}', $track->id);
 tpl()->set('{cover}', $track->cover);
+tpl()->set('{path}', $track->path);
 tpl()->set('{author_avatar}', $author->avatar);
 tpl()->set('{author_id}', $author->id);
 tpl()->set('{auditions}', $track->auditions);

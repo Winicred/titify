@@ -18,23 +18,23 @@
     <div class="player_tools">
         <div class="player_tools_container">
             <div class="player_song_tools">
-                <button onclick="shuffle_query($(this))" class="player_song_tools_secondary" data-bs-toggle="tooltip"
-                        title="Shuffle query">
+                <button class="player_song_tools_secondary" data-bs-toggle="tooltip"
+                        title="Shuffle query" onclick="shuffle_query($(this))">
                     <i class="fa-solid fa-shuffle"></i>
                 </button>
 
-                <button onclick="play_prev_track()" class="player_song_tools_main" data-bs-toggle="tooltip"
-                        title="Play previous track">
+                <button class="player_song_tools_main" data-bs-toggle="tooltip" id="prev_track_button"
+                        title="Play previous track" onclick="play_prev_track()">
                     <i class="fa-solid fa-backward-step"></i>
                 </button>
 
-                <button class="play_and_stop_track track_action_button" onclick="check_if_music_plays() === false ? play() : pause()" track-src=""
-                        data-bs-toggle="tooltip" title="Play">
+                <button class="play_and_stop_track track_action_button" id="btn_play" data-src=""
+                        data-bs-toggle="tooltip" title="Play" onclick="player_play();">
                     <i class="fa-solid fa-circle-play"></i>
                 </button>
 
-                <button onclick="play_next_track()" class="player_song_tools_main" data-bs-toggle="tooltip"
-                        title="Play next track">
+                <button class="player_song_tools_main" data-bs-toggle="tooltip" id="next_track_button"
+                        title="Play next track" onclick="play_next_track()">
                     <i class="fa-solid fa-forward-step"></i>
                 </button>
 
@@ -44,23 +44,23 @@
                 </button>
             </div>
 
-            <div class="player_playback_container" track-src="">
-                <span class="player_playback_current_time">0:00</span>
+            <div class="player_playback_container" id="player_data_src" data-src="">
+                <span class="player_playback_current_time" id="progress_time">0:00</span>
 
-                <div class="player_playback_bar_block">
+                <div class="player_playback_bar_block" id="progress">
                     <div class="player_playback_bar">
-                        <div class="player_playback_bar_progress"></div>
+                        <div class="player_playback_bar_progress" id="progress_bar"></div>
                     </div>
                 </div>
 
-                <span class="player_playback_total_time">0:00</span>
+                <span class="player_playback_total_time" id="progress_time_total">0:00</span>
             </div>
         </div>
     </div>
 
     <div class="player_sub_tools">
         <div class="volume_bar_container">
-            <button data-bs-toggle="tooltip" title="" onclick="mute_volume($(this))">
+            <button data-bs-toggle="tooltip" title="Mute" id="volume_button" onclick="mute_volume($(this))">
                 <i class="fa-solid fa-volume-xmark"></i>
 
                 <i class="fa-solid fa-volume-low" style="display: none"></i>
@@ -68,9 +68,9 @@
                 <i class="fa-solid fa-volume-high" style="display: none"></i>
             </button>
 
-            <div class="volume_bar_block">
+            <div class="volume_bar_block" id="volume_bar">
                 <div class="volume_bar">
-                    <div class="volume_bar_progress"></div>
+                    <div class="volume_bar_progress" id="volume_progress_bar"></div>
                 </div>
             </div>
         </div>
@@ -80,66 +80,4 @@
     if (sessionStorage.getItem('current_volume') === '') {
         get_user_volume();
     }
-
-    $(document).ready(function () {
-
-        const track_bar = $('.player_playback_bar_block');
-
-
-        track_bar.on('click', function (e) {
-            skip_track_time($(this), e)
-        }).on('mousedown', function (e) {
-            volumeDrag = true;
-            skip_track_time($(this), e)
-        }).on('mouseup', function (e) {
-            if (volumeDrag) {
-                volumeDrag = false;
-            }
-        }).on('mousemove', function (e) {
-            if (volumeDrag) {
-                skip_track_time($(this), e)
-            }
-        }).on('mouseleave', function (e) {
-            volumeDrag = false;
-            is_track_skipping = false;
-        })
-
-        let volumeDrag = false;
-        const volume_bar = $('.volume_bar_block')
-        volume_bar.on('mousedown', function (e) {
-            volumeDrag = true;
-            update_volume(e.pageX);
-        });
-
-        volume_bar.on('mouseup', function (e) {
-            if (volumeDrag) {
-                volumeDrag = false;
-                update_volume(e.pageX);
-            }
-        });
-
-        volume_bar.on('mousemove', function (e) {
-            if (volumeDrag) {
-                update_volume(e.pageX);
-            }
-        })
-
-        volume_bar.bind('mousewheel', function (e) {
-            if (e.originalEvent.wheelDelta / 120 > 0) {
-                update_volume(null, track.volume + 0.1);
-            } else {
-                update_volume(null, track.volume - 0.1);
-            }
-        });
-
-        track.addEventListener('timeupdate', () => {
-            change_track_data();
-        });
-
-        track.addEventListener('ended', () => {
-            setTimeout(() => {
-                play_next_track();
-            }, 2000);
-        });
-    });
 </script>

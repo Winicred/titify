@@ -2,7 +2,7 @@
 
 <div class="head_panel">
     <div class="input_search">
-        <input type="text" id="find_tracks_input" placeholder="Find Track">
+        <input type="text" id="find_tracks_input" placeholder="Find Track" data-bs-toggle="tooltip" data-bs-placement="left" title="Write search keyword here">
 
         <div class="find_tracks_results"></div>
 
@@ -14,7 +14,7 @@
     <div class="user_panel_navigation">
         {if (is_auth())}
 
-            <button class="upload_track_button" onclick="load_template('upload_track')">
+            <button class="upload_track_button" onclick="load_template('upload_track')" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Go to track uploading page">
                 Add music
             </button>
 
@@ -46,7 +46,7 @@
                 get_notifications();
             </script>
         {else}
-            <a href="login" class="button_login">Log in</a>
+            <a href="login" class="button_login" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Log in page">Log in</a>
         {/if}
     </div>
 </div>

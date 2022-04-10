@@ -25,7 +25,7 @@
             crossorigin="anonymous"></script>
 
     <script src="https://unpkg.com/dropzone@6.0.0-beta.1/dist/dropzone-min.js"></script>
-    <link href="https://unpkg.com/dropzone@6.0.0-beta.1/dist/dropzone.css" rel="stylesheet" type="text/css" />
+    <link href="https://unpkg.com/dropzone@6.0.0-beta.1/dist/dropzone.css" rel="stylesheet" type="text/css"/>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
@@ -37,13 +37,10 @@
     <link rel="stylesheet" href="{site_host}templates/standart/css/main.css">
     <link rel="stylesheet" href="{site_host}templates/standart/css/media.css">
 
-    {if ($page->url != 'login')}
-        <script src="{site_host}templates/standart/js/player.js" defer></script>
-    {/if}
-{*    <script src="{site_host}templates/standart/js/History.js" defer></script>*}
-    <script src="{site_host}templates/standart/js/jquery.history.js" defer></script>
+    <script src="{site_host}templates/standart/js/nprogress.js"></script>
     <script src="{site_host}ajax/helpers.js"></script>
     <script src="{site_host}ajax/ajax-user.js"></script>
+    <script src="{site_host}templates/standart/js/player.js" defer></script>
 
     <script>
         function on_load() {
@@ -52,10 +49,12 @@
             });
         }
     </script>
-    
+
     <script src="https://apis.google.com/js/platform.js?onload=on_load" async defer></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ru_RU/sdk.js#xfbml=1&version=v13.0&appId=227392456211200&autoLogAppEvents=1" nonce="X9PkIYqx"></script>
+    <script async defer crossorigin="anonymous"
+            src="https://connect.facebook.net/ru_RU/sdk.js#xfbml=1&version=v13.0&appId=227392456211200&autoLogAppEvents=1"
+            nonce="X9PkIYqx"></script>
 
     <script>
         function statusChangeCallback(response, access_token) {  // Called with the results from FB.getLoginStatus().
@@ -63,7 +62,7 @@
                 '/me',
                 'GET',
                     {"fields":"email,first_name,last_name,picture{url},name"},
-                function(fb_login) {
+                function (fb_login) {
                     auth_by_api('facebook', fb_login, access_token);
                 }
             );
@@ -71,7 +70,7 @@
 
         function checkLoginState() {
             let access_token = '';
-            FB.getLoginStatus(function(response) {
+            FB.getLoginStatus(function (response) {
                 if (response.status === 'connected') {
                     access_token = response.authResponse.accessToken;
                     statusChangeCallback(response, access_token);
@@ -79,33 +78,34 @@
             });
         }
 
-
-        window.fbAsyncInit = function() {
+        window.fbAsyncInit = function () {
             FB.init({
-                appId      : '227392456211200',
-                cookie     : true,                     // Enable cookies to allow the server to access the session.
-                xfbml      : true,                     // Parse social plugins on this webpage.
-                version    : 'v13.0'           // Use this Graph API version for this call.
+                appId: '227392456211200',
+                cookie: true,                     // Enable cookies to allow the server to access the session.
+                xfbml: true,                     // Parse social plugins on this webpage.
+                version: 'v13.0'           // Use this Graph API version for this call.
             });
         };
 
     </script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vibrant.js/1.0.0/Vibrant.min.js" integrity="sha512-V6rhYmJy8NZQF8F0bhJiTM0iI6wX/FKJoWvYrCM15UIeb6p38HjvTZWfO0IxJnMZrHWUJZJqLuWK0zslra2FVw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vibrant.js/1.0.0/Vibrant.min.js"
+            integrity="sha512-V6rhYmJy8NZQF8F0bhJiTM0iI6wX/FKJoWvYrCM15UIeb6p38HjvTZWfO0IxJnMZrHWUJZJqLuWK0zslra2FVw=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 
 <input id="token" value="{token}">
 
-{if ($page->url != 'login')}
-    <body onload="init_player()">
+{if ($page->url == 'login' || $page->url == 'recovery')}
+    <body>
+
+{else}
+<body>
 
     {include file="elements/main_navigation.tpl"}
 
 <main>
 
     {include file="elements/head_navigation.tpl"}
-
     <div class="container">
-{else}
-    <body>
 {/if}

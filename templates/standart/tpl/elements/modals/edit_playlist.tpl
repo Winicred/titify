@@ -60,10 +60,11 @@ $playlist_tracks = get_playlist_tracks('{id}');
                                                     <img src="{{$playlist_tracks[$i]['cover']}}" alt=""
                                                          style="width: 40px; height: 40px">
                                                 </div>
-                                                <div class="track_in_playlist_title" style="margin-left: 5px">
+                                                <div class="track_in_playlist_title" style="margin-left: 5px; font-size: 14px">
                                                     {{$playlist_tracks[$i]['title']}}
                                                 </div>
-                                                <div class="track_in_playlist_remove btn btn-outline-danger"
+{*                                                tooltip*}
+                                                <div class="track_in_playlist_remove btn btn-outline-danger" title="Remove track from playlist"
                                                      onclick="delete_track_from_playlist({{$playlist->id}}, {{$playlist_tracks[$i]['id']}}, $(this))"
                                                      data-track-id="{{$playlist_tracks[$i]['id']}}"
                                                      style="margin-left: auto">
@@ -109,6 +110,7 @@ $playlist_tracks = get_playlist_tracks('{id}');
                 <input type="password" class="form-control" id="delete_playlist_password" placeholder="Password">
             </div>
             <div class="modal-footer">
+                <span class="modal_result"></span>
                 <button class="btn btn-secondary" data-bs-target="#edit_playlist" data-bs-toggle="modal">Back</button>
                 <button class="btn btn-danger" onclick="delete_playlist({id}, $('#delete_playlist_password').val())">Delete</button>
             </div>
@@ -127,6 +129,11 @@ $playlist_tracks = get_playlist_tracks('{id}');
 
         if (file.size > 100000000) {
             alert("Image must not exceed 1 mb.");
+            return;
+        }
+
+        if (file.type === "image/gif") {
+            alert("Image must be jpeg, png or gif.");
             return;
         }
 
